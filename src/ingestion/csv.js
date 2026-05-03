@@ -1,31 +1,74 @@
+import { findDuplicateCandidates } from './dedupe.js';
 import { canonicalizeTransaction } from './normalize.js';
+import { validateCanonicalTransaction } from './validate.js';
 
 export function parseCsv(text, options = {}) {
+  return createCsvPreview(text, options).transactions;
+}
+
+export function createCsvPreview(text, options = {}) {
   const delimiter = options.delimiter ?? detectDelimiter(text);
   const rows = parseDelimitedRows(text, delimiter);
 
   if (rows.length === 0) {
-    return [];
+    return {
+      header: [],
+      mapping: null,
+      transactions: [],
+      duplicates: [],
+      issues: [],
+      summary: { totalRows: 0, importedRows: 0, duplicateRows: 0, issueCount: 0 },
+    };
   }
 
   const [header, ...body] = rows;
   const mapping = normalizeMapping(options.mapping ?? inferMapping(header));
 
-  return body
+  const rowIssues = [];
+  const transactions = body
     .filter((row) => row.some((cell) => cell.trim() !== ''))
-    .map((row, index) => {
+    .flatMap((row, index) => {
       const record = Object.fromEntries(header.map((name, columnIndex) => [name, row[columnIndex] ?? '']));
-      return canonicalizeTransaction(record, mapping, { rowNumber: index + 2 });
+      const rowNumber = index + 2;
+
+      try {
+        return [canonicalizeTransaction(record, mapping, { rowNumber })];
+      } catch (error) {
+        rowIssues.push({
+          severity: 'error',
+          field: 'row',
+          message: error.message,
+          rowNumber,
+        });
+        return [];
+      }
     });
+
+  const duplicates = findDuplicateCandidates(transactions);
+  const issues = [...rowIssues, ...transactions.flatMap(validateCanonicalTransaction)];
+
+  return {
+    header,
+    mapping,
+    transactions,
+    duplicates,
+    issues,
+    summary: {
+      totalRows: body.length,
+      importedRows: transactions.length,
+      duplicateRows: duplicates.length,
+      issueCount: issues.length,
+    },
+  };
 }
 
 export function inferMapping(header) {
   const normalized = header.map((name) => [name, name.toLowerCase().replace(/[^a-z0-9]/g, '')]);
-  const find = (...candidates) => normalized.find(([, value]) => candidates.includes(value))?.[0];
+  const find = (...candidates) => normalized.find(([, value]) => candidates.some((candidate) => value === candidate || value.includes(candidate)))?.[0];
 
   return {
     date: find('date', 'transactiondate', 'posteddate', 'effectivedate'),
-    description: find('description', 'details', 'narrative', 'payee', 'merchant'),
+    description: find('description', 'details', 'narrative', 'payee', 'merchant', 'memo'),
     amount: find('amount', 'transactionamount', 'value'),
     debit: find('debit', 'withdrawal', 'withdrawals', 'moneyout'),
     credit: find('credit', 'deposit', 'deposits', 'moneyin'),

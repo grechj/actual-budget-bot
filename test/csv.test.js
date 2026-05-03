@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createImportedId, findDuplicateCandidates, parseCsv } from '../src/index.js';
+import { createCsvPreview, createImportedId, findDuplicateCandidates, parseCsv } from '../src/index.js';
 
 test('parses a simple bank CSV into canonical transactions', () => {
   const csv = [
@@ -34,4 +34,56 @@ test('finds duplicate transactions in an import batch', () => {
   ];
 
   assert.equal(findDuplicateCandidates(transactions).length, 1);
+});
+
+test('creates a CSV preview with mapping, issues, duplicates, and summary', () => {
+  const csv = [
+    'Transaction Date,Merchant,Amount',
+    '2026-05-01,Coffee,-5.00',
+    '2026-05-01,Coffee,-5.00',
+    '2026-05-02,Adjustment,0',
+  ].join('\n');
+
+  const preview = createCsvPreview(csv);
+
+  assert.equal(preview.mapping.date, 'Transaction Date');
+  assert.equal(preview.mapping.description, 'Merchant');
+  assert.equal(preview.mapping.amount, 'Amount');
+  assert.equal(preview.transactions.length, 3);
+  assert.equal(preview.duplicates.length, 1);
+  assert.equal(preview.summary.importedRows, 3);
+  assert.ok(preview.issues.some((issue) => issue.severity === 'warning' && issue.field === 'amount'));
+});
+
+test('supports explicit mapping profiles for unusual bank headers', () => {
+  const csv = [
+    'When,Who,Out,In',
+    '01/05/2026,Grocer,30.00,',
+  ].join('\n');
+
+  const preview = createCsvPreview(csv, {
+    mapping: {
+      date: 'When',
+      description: 'Who',
+      debit: 'Out',
+      credit: 'In',
+    },
+  });
+
+  assert.equal(preview.transactions[0].date, '2026-05-01');
+  assert.equal(preview.transactions[0].description, 'Grocer');
+  assert.equal(preview.transactions[0].amount, -30);
+});
+
+test('reports row errors without crashing the preview', () => {
+  const csv = [
+    'Date,Description,Amount',
+    ',Coffee,-5.00',
+  ].join('\n');
+
+  const preview = createCsvPreview(csv);
+
+  assert.equal(preview.transactions.length, 0);
+  assert.equal(preview.issues[0].severity, 'error');
+  assert.equal(preview.issues[0].rowNumber, 2);
 });

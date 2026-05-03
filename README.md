@@ -52,7 +52,13 @@ docs/
 node src/cli.js csv:preview ./path/to/bank.csv
 ```
 
-The command prints canonical transactions and duplicate candidates. It does not write to Actual yet.
+With an explicit mapping profile:
+
+```bash
+node src/cli.js csv:preview ./path/to/bank.csv --mapping ./examples/mappings/example-bank.json
+```
+
+The command prints headers, mapping, canonical transactions, duplicate candidates, validation issues, and a summary. It does not write to Actual yet.
 
 ## Configuration
 
@@ -80,10 +86,12 @@ Actual budget IDs are available in Actual's advanced settings.
 
 ### Phase 1
 
-- CSV import preview
-- Mapping inference
-- Canonical transaction model
-- Duplicate detection
+- CSV import preview: implemented
+- Mapping inference: implemented
+- Canonical transaction model: implemented
+- Duplicate detection: implemented
+- Mapping profile support: implemented
+- Row-level validation issues: implemented
 
 ### Phase 2
 

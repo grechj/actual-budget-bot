@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "name": "Example Bank CSV",
+  "bank": "Example Bank",
+  "delimiter": ",",
+  "mapping": {
+    "date": "Date",
+    "description": "Description",
+    "debit": "Debit",
+    "credit": "Credit",
+    "externalId": "Reference"
+  }
+}
