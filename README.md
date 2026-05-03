@@ -113,10 +113,12 @@ Actual budget IDs are available in Actual's advanced settings.
 
 ### Phase 2
 
-- Saved mapping profiles
-- Review/edit workflow
-- Actual dry-run import
-- Actual commit import
+- Saved mapping profiles: implemented
+- Review/edit workflow: implemented
+- Actual dry-run import: implemented as a guarded CLI command
+- Actual commit import: implemented with explicit `--yes`
+
+See [docs/phase-2.md](docs/phase-2.md).
 
 ### Phase 3
 
