@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "name": "No Header: Date, Amount, Description, Balance",
+  "bank": "Generic bank export",
+  "delimiter": ",",
+  "hasHeader": false,
+  "mapping": {
+    "date": "Column 1",
+    "amount": "Column 2",
+    "description": "Column 3"
+  }
+}

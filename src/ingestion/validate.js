@@ -18,10 +18,6 @@ export function validateCanonicalTransaction(transaction) {
     issues.push(createIssue('warning', 'amount', 'Transaction amount is zero.', rowNumber));
   }
 
-  if (!transaction.external_id) {
-    issues.push(createIssue('info', 'external_id', 'No external transaction ID was supplied; AB Bot will use a stable hash.', rowNumber));
-  }
-
   return issues;
 }
 

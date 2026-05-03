@@ -31,7 +31,7 @@ Actual Budget file and sync server
 ```json
 {
   "date": "2026-05-01",
-  "description": "WOOLWORTHS 1234",
+  "description": "Example Grocer",
   "amount": -42.3,
   "account": "Everyday",
   "external_id": "abc123",

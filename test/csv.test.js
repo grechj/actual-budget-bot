@@ -5,14 +5,14 @@ import { createCsvPreview, createImportedId, findDuplicateCandidates, parseCsv }
 test('parses a simple bank CSV into canonical transactions', () => {
   const csv = [
     'Date,Description,Debit,Credit,Reference',
-    '01/05/2026,WOOLWORTHS 1234,42.30,,abc',
+    '01/05/2026,Example Grocer,42.30,,abc',
     '02/05/2026,Salary,,2500.00,def',
   ].join('\n');
 
   const transactions = parseCsv(csv);
 
   assert.deepEqual(transactions.map(({ date, description, amount, external_id }) => ({ date, description, amount, external_id })), [
-    { date: '2026-05-01', description: 'WOOLWORTHS 1234', amount: -42.3, external_id: 'abc' },
+    { date: '2026-05-01', description: 'Example Grocer', amount: -42.3, external_id: 'abc' },
     { date: '2026-05-02', description: 'Salary', amount: 2500, external_id: 'def' },
   ]);
 });
@@ -86,4 +86,26 @@ test('reports row errors without crashing the preview', () => {
   assert.equal(preview.transactions.length, 0);
   assert.equal(preview.issues[0].severity, 'error');
   assert.equal(preview.issues[0].rowNumber, 2);
+});
+
+test('supports CSV exports without a header row', () => {
+  const csv = [
+    '18/01/2026,"-14.00","Example Bike Shop","+7523.27"',
+    '18/01/2026,"-103.00","Example Grocery Store","+7537.27"',
+  ].join('\n');
+
+  const preview = createCsvPreview(csv, {
+    hasHeader: false,
+    mapping: {
+      date: 'Column 1',
+      amount: 'Column 2',
+      description: 'Column 3',
+    },
+  });
+
+  assert.deepEqual(preview.header, ['Column 1', 'Column 2', 'Column 3', 'Column 4']);
+  assert.equal(preview.transactions.length, 2);
+  assert.equal(preview.transactions[0].date, '2026-01-18');
+  assert.equal(preview.transactions[0].amount, -14);
+  assert.equal(preview.transactions[0].description, 'Example Bike Shop');
 });

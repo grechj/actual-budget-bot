@@ -17,6 +17,7 @@ export function createMappingProfile({ name, bank, mapping, delimiter = null }) 
     name,
     bank,
     delimiter,
+    hasHeader: true,
     mapping,
   };
 }

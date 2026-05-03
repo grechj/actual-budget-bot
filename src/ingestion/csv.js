@@ -21,7 +21,10 @@ export function createCsvPreview(text, options = {}) {
     };
   }
 
-  const [header, ...body] = rows;
+  const hasHeader = options.hasHeader ?? true;
+  const [firstRow, ...remainingRows] = rows;
+  const header = hasHeader ? firstRow : createSyntheticHeader(firstRow.length);
+  const body = hasHeader ? remainingRows : rows;
   const mapping = normalizeMapping(options.mapping ?? inferMapping(header));
 
   const rowIssues = [];
@@ -91,6 +94,10 @@ function detectDelimiter(text) {
   return candidates
     .map((candidate) => [candidate, firstLine.split(candidate).length])
     .sort((a, b) => b[1] - a[1])[0][0];
+}
+
+function createSyntheticHeader(columnCount) {
+  return Array.from({ length: columnCount }, (_, index) => `Column ${index + 1}`);
 }
 
 function parseDelimitedRows(text, delimiter) {

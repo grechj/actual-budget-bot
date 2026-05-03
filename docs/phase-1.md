@@ -23,6 +23,12 @@ With an explicit mapping profile:
 node src/cli.js csv:preview ./transactions.csv --mapping ./examples/mappings/example-bank.json
 ```
 
+For exports without a header row:
+
+```bash
+node src/cli.js csv:preview ./transactions.csv --mapping ./examples/mappings/no-header-date-amount-description-balance.json
+```
+
 ## Preview Output
 
 The command returns:
@@ -31,7 +37,7 @@ The command returns:
 - `mapping`: inferred or supplied column mapping
 - `transactions`: canonical transactions
 - `duplicates`: duplicate candidates within the import batch
-- `issues`: row-level validation messages
+- `issues`: row-level validation messages for data that needs attention
 - `summary`: import counts
 
 ## Canonical Transaction
@@ -39,7 +45,7 @@ The command returns:
 ```json
 {
   "date": "2026-05-01",
-  "description": "WOOLWORTHS 1234",
+  "description": "Example Grocer",
   "amount": -42.3,
   "account": null,
   "external_id": "abc123",

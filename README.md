@@ -58,6 +58,12 @@ With an explicit mapping profile:
 node src/cli.js csv:preview ./path/to/bank.csv --mapping ./examples/mappings/example-bank.json
 ```
 
+For bank exports without a header row:
+
+```bash
+node src/cli.js csv:preview ./path/to/bank.csv --mapping ./examples/mappings/no-header-date-amount-description-balance.json
+```
+
 The command prints headers, mapping, canonical transactions, duplicate candidates, validation issues, and a summary. It does not write to Actual yet.
 
 ## Configuration

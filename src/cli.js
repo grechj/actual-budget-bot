@@ -34,10 +34,13 @@ async function parsePreviewArgs(args) {
       const profile = await loadMappingProfile(mappingPath);
       options.mapping = profile.mapping;
       options.delimiter = profile.delimiter ?? undefined;
+      options.hasHeader = profile.hasHeader ?? undefined;
       index += 1;
     } else if (arg === '--delimiter') {
       options.delimiter = args[index + 1];
       index += 1;
+    } else if (arg === '--no-header') {
+      options.hasHeader = false;
     } else if (!filePath) {
       filePath = arg;
     }
@@ -47,6 +50,6 @@ async function parsePreviewArgs(args) {
 }
 
 function exitWithUsage() {
-  console.error('Usage: ab-bot csv:preview <path-to-bank.csv> [--mapping profile.json] [--delimiter ,]');
+  console.error('Usage: ab-bot csv:preview <path-to-bank.csv> [--mapping profile.json] [--delimiter ,] [--no-header]');
   process.exit(1);
 }
