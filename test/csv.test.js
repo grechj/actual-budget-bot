@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createCsvPreview, createImportedId, findDuplicateCandidates, parseCsv } from '../src/index.js';
+import { createCsvPreview, createImportedId, findDuplicateCandidates, formatCsvPreview, parseCsv } from '../src/index.js';
 
 test('parses a simple bank CSV into canonical transactions', () => {
   const csv = [
@@ -108,4 +108,36 @@ test('supports CSV exports without a header row', () => {
   assert.equal(preview.transactions[0].date, '2026-01-18');
   assert.equal(preview.transactions[0].amount, -14);
   assert.equal(preview.transactions[0].description, 'Example Bike Shop');
+});
+
+test('formats a limited CSV preview for safer terminal output', () => {
+  const csv = [
+    'Date,Description,Amount',
+    '2026-05-01,Coffee,-5.00',
+    '2026-05-02,Lunch,-15.00',
+    '2026-05-03,Book,-20.00',
+  ].join('\n');
+
+  const formatted = formatCsvPreview(createCsvPreview(csv), { limit: 2 });
+
+  assert.equal(formatted.transactions.length, 2);
+  assert.equal(formatted.summary.displayedRows, 2);
+  assert.equal(formatted.summary.hiddenRows, 1);
+});
+
+test('formats a summary-only CSV preview', () => {
+  const csv = [
+    'Date,Description,Amount',
+    '2026-05-01,Coffee,-5.00',
+    '2026-05-01,Coffee,-5.00',
+  ].join('\n');
+
+  const formatted = formatCsvPreview(createCsvPreview(csv), { summaryOnly: true });
+
+  assert.equal(formatted.transactions.length, 0);
+  assert.equal(formatted.summary.displayedRows, 0);
+  assert.equal(formatted.summary.hiddenRows, 2);
+  assert.equal(formatted.duplicates[0].firstRowNumber, 2);
+  assert.equal(formatted.duplicates[0].duplicateRowNumber, 3);
+  assert.equal(formatted.duplicates[0].description, undefined);
 });

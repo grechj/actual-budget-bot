@@ -64,6 +64,18 @@ For bank exports without a header row:
 node src/cli.js csv:preview ./path/to/bank.csv --mapping ./examples/mappings/no-header-date-amount-description-balance.json
 ```
 
+For a safer short preview while testing:
+
+```bash
+node src/cli.js csv:preview ./path/to/bank.csv --mapping ./examples/mappings/no-header-date-amount-description-balance.json --limit 10
+```
+
+For only counts, issues, and duplicate row references:
+
+```bash
+node src/cli.js csv:preview ./path/to/bank.csv --mapping ./examples/mappings/no-header-date-amount-description-balance.json --summary
+```
+
 The command prints headers, mapping, canonical transactions, duplicate candidates, validation issues, and a summary. It does not write to Actual yet.
 
 ## Configuration

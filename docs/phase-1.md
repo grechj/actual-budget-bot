@@ -29,6 +29,18 @@ For exports without a header row:
 node src/cli.js csv:preview ./transactions.csv --mapping ./examples/mappings/no-header-date-amount-description-balance.json
 ```
 
+For a capped preview:
+
+```bash
+node src/cli.js csv:preview ./transactions.csv --mapping ./examples/mappings/no-header-date-amount-description-balance.json --limit 10
+```
+
+For summary-only output:
+
+```bash
+node src/cli.js csv:preview ./transactions.csv --mapping ./examples/mappings/no-header-date-amount-description-balance.json --summary
+```
+
 ## Preview Output
 
 The command returns:

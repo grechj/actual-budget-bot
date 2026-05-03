@@ -1,25 +1,27 @@
 #!/usr/bin/env node
 import { readFile } from 'node:fs/promises';
-import { createCsvPreview, loadMappingProfile } from './index.js';
+import { createCsvPreview, formatCsvPreview, loadMappingProfile } from './index.js';
 
 const [, , command, ...args] = process.argv;
 
 if (command === 'csv:preview') {
-  const { filePath, options } = await parsePreviewArgs(args);
+  const { filePath, options, output } = await parsePreviewArgs(args);
   if (!filePath) {
     exitWithUsage();
   }
 
   const text = await readFile(filePath, 'utf8');
   const preview = createCsvPreview(text, options);
+  const formatted = formatCsvPreview(preview, output);
 
-  console.log(JSON.stringify(preview, null, 2));
+  console.log(JSON.stringify(formatted, null, 2));
 } else {
   exitWithUsage();
 }
 
 async function parsePreviewArgs(args) {
   const options = {};
+  const output = {};
   let filePath = null;
 
   for (let index = 0; index < args.length; index += 1) {
@@ -41,15 +43,25 @@ async function parsePreviewArgs(args) {
       index += 1;
     } else if (arg === '--no-header') {
       options.hasHeader = false;
+    } else if (arg === '--summary') {
+      output.summaryOnly = true;
+    } else if (arg === '--limit') {
+      const limit = Number.parseInt(args[index + 1], 10);
+      if (!Number.isInteger(limit) || limit < 0) {
+        throw new Error('--limit requires a non-negative number.');
+      }
+
+      output.limit = limit;
+      index += 1;
     } else if (!filePath) {
       filePath = arg;
     }
   }
 
-  return { filePath, options };
+  return { filePath, options, output };
 }
 
 function exitWithUsage() {
-  console.error('Usage: ab-bot csv:preview <path-to-bank.csv> [--mapping profile.json] [--delimiter ,] [--no-header]');
+  console.error('Usage: ab-bot csv:preview <path-to-bank.csv> [--mapping profile.json] [--delimiter ,] [--no-header] [--summary] [--limit 10]');
   process.exit(1);
 }
