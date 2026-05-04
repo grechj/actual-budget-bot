@@ -126,6 +126,7 @@ See [docs/phase-2.md](docs/phase-2.md).
 - Budget summary tools: implemented
 - Category suggestion engine: implemented
 - First AI provider: implemented for OpenAI Responses API
+- Local category rules: implemented
 
 See [docs/phase-3.md](docs/phase-3.md).
 

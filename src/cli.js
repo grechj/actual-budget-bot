@@ -10,6 +10,7 @@ import {
   getApprovedTransactions,
   listMappingProfiles,
   loadActualConfig,
+  loadCategoryRules,
   loadMappingProfile,
   loadReview,
   resolveMappingProfile,
@@ -82,6 +83,14 @@ if (command === 'csv:preview') {
   });
 } else if (command === 'category:suggest') {
   await suggestReviewCategories(args);
+} else if (command === 'review:insights') {
+  const { reviewPath, limit } = parseReviewSummaryArgs(args);
+  const review = await loadReview(reviewPath);
+  console.log(JSON.stringify({
+    reviewPath,
+    transactionSummary: summarizeTransactions(review.transactions, { amountFormat: 'amount', groupLimit: limit }),
+    reviewSummary: summarizeReview(review, { limit }).summary,
+  }, null, 2));
 } else if (command === 'ai:ask') {
   await askAi(args);
 } else if (command === 'actual:dry-run') {
@@ -287,25 +296,36 @@ function parseDateRangeAccountArgs(args) {
 
 async function suggestReviewCategories(args) {
   const reviewPath = args[0];
-  const { accountId, startDate, endDate, limit } = parseSuggestionArgs(args.slice(1));
+  const { accountId, startDate, endDate, limit, rulesPath } = parseSuggestionArgs(args.slice(1));
 
   if (!reviewPath) {
     exitWithUsage();
   }
 
   const review = await loadReview(reviewPath);
+  const rules = rulesPath ? loadCategoryRules(JSON.parse(await readFile(rulesPath, 'utf8'))) : [];
+
+  if (!accountId) {
+    console.log(JSON.stringify({
+      reviewPath,
+      suggestions: suggestCategories(review.transactions, [], { limit, rules }),
+    }, null, 2));
+    return;
+  }
+
   await withActualClient(async (actual) => {
     const history = await actual.getTransactions(accountId, startDate, endDate);
     console.log(JSON.stringify({
       reviewPath,
-      suggestions: suggestCategories(review.transactions, history, { limit }),
+      suggestions: suggestCategories(review.transactions, history, { limit, rules }),
     }, null, 2));
   });
 }
 
 function parseSuggestionArgs(args) {
-  const parsed = parseDateRangeAccountArgs(args);
+  const parsed = parseOptionalDateRangeAccountArgs(args);
   let limit = 20;
+  let rulesPath = null;
 
   for (let index = 0; index < args.length; index += 1) {
     if (args[index] === '--limit') {
@@ -314,10 +334,38 @@ function parseSuggestionArgs(args) {
         throw new Error('--limit requires a non-negative number.');
       }
       index += 1;
+    } else if (args[index] === '--rules') {
+      rulesPath = args[index + 1];
+      index += 1;
     }
   }
 
-  return { ...parsed, limit };
+  return { ...parsed, limit, rulesPath };
+}
+
+function parseOptionalDateRangeAccountArgs(args) {
+  let accountId = null;
+  let startDate = null;
+  let endDate = null;
+
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === '--account-id') {
+      accountId = args[index + 1];
+      index += 1;
+    } else if (args[index] === '--start-date') {
+      startDate = args[index + 1];
+      index += 1;
+    } else if (args[index] === '--end-date') {
+      endDate = args[index + 1];
+      index += 1;
+    }
+  }
+
+  if ((accountId || startDate || endDate) && (!accountId || !startDate || !endDate)) {
+    throw new Error('--account-id, --start-date, and --end-date must be provided together.');
+  }
+
+  return { accountId, startDate, endDate };
 }
 
 async function askAi(args) {
@@ -358,7 +406,8 @@ function exitWithUsage() {
       '  ab-bot review:approve-all <review.json>',
       '  ab-bot actual:accounts',
       '  ab-bot actual:summary --account-id <actual-account-id> --start-date YYYY-MM-DD --end-date YYYY-MM-DD',
-      '  ab-bot category:suggest <review.json> --account-id <actual-account-id> --start-date YYYY-MM-DD --end-date YYYY-MM-DD [--limit 20]',
+      '  ab-bot review:insights <review.json> [--limit 10]',
+      '  ab-bot category:suggest <review.json> [--rules rules.json] [--account-id <actual-account-id> --start-date YYYY-MM-DD --end-date YYYY-MM-DD] [--limit 20]',
       '  ab-bot ai:ask "question" --account-id <actual-account-id> --start-date YYYY-MM-DD --end-date YYYY-MM-DD',
       '  ab-bot actual:dry-run <review.json> --account-id <actual-account-id> [--ids]',
       '  ab-bot actual:commit <review.json> --account-id <actual-account-id> --yes [--ids]',

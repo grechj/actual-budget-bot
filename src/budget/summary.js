@@ -1,6 +1,7 @@
 export function summarizeTransactions(transactions, options = {}) {
   const currency = options.currency || 'AUD';
-  const rows = transactions.map(normalizeActualTransaction);
+  const groupLimit = options.groupLimit ?? 10;
+  const rows = transactions.map((transaction) => normalizeActualTransaction(transaction, options));
   const totals = rows.reduce((acc, transaction) => {
     if (transaction.amount < 0) {
       acc.spending += Math.abs(transaction.amount);
@@ -15,8 +16,8 @@ export function summarizeTransactions(transactions, options = {}) {
     currency,
     transactionCount: rows.length,
     totals: roundTotals(totals),
-    byCategory: summarizeBy(rows, (transaction) => transaction.categoryName || 'Uncategorised'),
-    byPayee: summarizeBy(rows, (transaction) => transaction.payeeName || transaction.description || 'Unknown'),
+    byCategory: limitGroups(summarizeBy(rows, (transaction) => transaction.categoryName || 'Uncategorised'), groupLimit),
+    byPayee: limitGroups(summarizeBy(rows, (transaction) => transaction.payeeName || transaction.description || 'Unknown'), groupLimit),
   };
 }
 
@@ -36,12 +37,14 @@ export function summarizeBudgetMonth(budgetMonth) {
   };
 }
 
-export function normalizeActualTransaction(transaction) {
+export function normalizeActualTransaction(transaction, options = {}) {
+  const amountFormat = options.amountFormat || 'cents';
+
   return {
     id: transaction.id || null,
     date: transaction.date,
-    amount: centsToAmount(transaction.amount ?? 0),
-    description: transaction.imported_payee || transaction.importedPayee || transaction.payee_name || transaction.notes || '',
+    amount: amountFormat === 'amount' ? Number(transaction.amount ?? 0) : centsToAmount(transaction.amount ?? 0),
+    description: transaction.description || transaction.imported_payee || transaction.importedPayee || transaction.payee_name || transaction.notes || '',
     payeeName: transaction.payee_name || transaction.payeeName || transaction.imported_payee || transaction.importedPayee || null,
     categoryId: transaction.category || transaction.category_id || transaction.categoryId || null,
     categoryName: transaction.category_name || transaction.categoryName || null,
@@ -98,4 +101,12 @@ function roundTotals(totals) {
 
 function centsToAmount(value) {
   return Math.round(Number(value || 0)) / 100;
+}
+
+function limitGroups(groups, limit) {
+  if (limit === null || limit === undefined) {
+    return groups;
+  }
+
+  return groups.slice(0, Math.max(limit, 0));
 }

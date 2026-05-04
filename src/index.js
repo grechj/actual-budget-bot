@@ -15,7 +15,7 @@ export { loadActualConfig } from './config/actual.js';
 export { createActualBudgetClient } from './adapters/actualBudget.js';
 export { summarizeActualImportResult, withoutConsoleInfo } from './adapters/importResult.js';
 export { summarizeBudgetMonth, summarizeTransactions, normalizeActualTransaction } from './budget/summary.js';
-export { buildHistoryIndex, normalizeMerchant, suggestCategories } from './category/suggest.js';
+export { buildHistoryIndex, loadCategoryRules, normalizeMerchant, suggestCategories } from './category/suggest.js';
 export { buildBudgetContext } from './ai/context.js';
 export { OpenAIProvider } from './ai/openaiProvider.js';
 export { createBudgetTools } from './ai/tools.js';

@@ -1,0 +1,65 @@
+[
+  {
+    "name": "Aldi to groceries",
+    "pattern": "aldi",
+    "category": {
+      "id": null,
+      "name": "Groceries"
+    },
+    "confidence": 0.85
+  },
+  {
+    "name": "Woolworths to groceries",
+    "pattern": "woolworths",
+    "category": {
+      "id": null,
+      "name": "Groceries"
+    },
+    "confidence": 0.85
+  },
+  {
+    "name": "Bakers Delight to groceries",
+    "pattern": "bakers delight",
+    "category": {
+      "id": null,
+      "name": "Groceries"
+    },
+    "confidence": 0.75
+  },
+  {
+    "name": "Caltex to fuel",
+    "pattern": "caltex",
+    "category": {
+      "id": null,
+      "name": "Fuel"
+    },
+    "confidence": 0.8
+  },
+  {
+    "name": "Netflix to subscriptions",
+    "pattern": "netflix",
+    "category": {
+      "id": null,
+      "name": "Subscriptions"
+    },
+    "confidence": 0.8
+  },
+  {
+    "name": "Direct credit to income",
+    "pattern": "direct credit",
+    "category": {
+      "id": null,
+      "name": "Income"
+    },
+    "confidence": 0.7
+  },
+  {
+    "name": "Transfer to transfers",
+    "pattern": "transfer",
+    "category": {
+      "id": null,
+      "name": "Transfers"
+    },
+    "confidence": 0.65
+  }
+]

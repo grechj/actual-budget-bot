@@ -10,6 +10,8 @@ Summarise Actual transactions for an account and date range:
 node src/cli.js actual:summary --account-id ACCOUNT_ID --start-date 2026-01-01 --end-date 2026-01-31
 ```
 
+This reads committed transactions from Actual. If you have only run `actual:dry-run`, the Actual summary will still be empty because dry-run does not write rows.
+
 The summary includes:
 
 - total income
@@ -17,6 +19,18 @@ The summary includes:
 - net movement
 - spending grouped by category
 - spending grouped by payee
+
+Summarise an uncommitted review file:
+
+```bash
+node src/cli.js review:insights .ab-bot/reviews/review-YYYYMMDDHHMMSS.json
+```
+
+For summary-only output:
+
+```bash
+node src/cli.js review:insights .ab-bot/reviews/review-YYYYMMDDHHMMSS.json --limit 0
+```
 
 ## Category Suggestions
 
@@ -27,6 +41,12 @@ node src/cli.js category:suggest .ab-bot/reviews/review-YYYYMMDDHHMMSS.json --ac
 ```
 
 The first version is deterministic. It normalises merchant descriptions and matches them against previously categorised transactions.
+
+You can also use local rules without committed Actual history:
+
+```bash
+node src/cli.js category:suggest .ab-bot/reviews/review-YYYYMMDDHHMMSS.json --rules examples/category-rules/australia-basic.json --limit 20
+```
 
 It does not write categories back to the review file yet.
 
