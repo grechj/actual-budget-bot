@@ -15,6 +15,8 @@ import {
   saveMappingProfile,
   saveReview,
   summarizeReview,
+  summarizeActualImportResult,
+  withoutConsoleInfo,
 } from './index.js';
 
 const [, , command, ...args] = process.argv;
@@ -204,12 +206,16 @@ async function importReviewToActual(args, options) {
   }
 
   await withActualClient(async (actual) => {
-    const result = await actual.importTransactions(accountId, transactions, {
+    const result = await withoutConsoleInfo(() => actual.importTransactions(accountId, transactions, {
       dryRun: options.dryRun,
       defaultCleared: true,
       reimportDeleted: false,
-    });
-    console.log(JSON.stringify({ dryRun: options.dryRun, attemptedRows: transactions.length, result }, null, 2));
+    }));
+    console.log(JSON.stringify({
+      dryRun: options.dryRun,
+      attemptedRows: transactions.length,
+      result: summarizeActualImportResult(result),
+    }, null, 2));
   });
 }
 

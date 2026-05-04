@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createActualBudgetClient } from '../src/index.js';
+import { createActualBudgetClient, summarizeActualImportResult, withoutConsoleInfo } from '../src/index.js';
 
 test('passes dry-run import options through to Actual Budget API', async () => {
   const calls = [];
@@ -44,4 +44,42 @@ test('passes dry-run import options through to Actual Budget API', async () => {
   assert.equal(importCall[3].dryRun, true);
   assert.equal(importCall[3].defaultCleared, true);
   assert.equal(importCall[3].reimportDeleted, false);
+});
+
+test('summarizes Actual import results without transaction details', () => {
+  const result = summarizeActualImportResult({
+    errors: [],
+    added: ['transaction-id-1', 'transaction-id-2'],
+    updated: ['transaction-id-3'],
+    updatedPreview: [],
+  });
+
+  assert.deepEqual(result, {
+    errors: [],
+    addedCount: 2,
+    updatedCount: 1,
+    updatedPreviewCount: 0,
+    added: ['transaction-id-1', 'transaction-id-2'],
+    updated: ['transaction-id-3'],
+    updatedPreview: [],
+  });
+});
+
+test('can suppress noisy library console output during imports', async () => {
+  let called = false;
+  const originalLog = console.log;
+
+  try {
+    console.log = () => {
+      called = true;
+    };
+
+    await withoutConsoleInfo(async () => {
+      console.log('private import debug details');
+    });
+  } finally {
+    console.log = originalLog;
+  }
+
+  assert.equal(called, false);
 });

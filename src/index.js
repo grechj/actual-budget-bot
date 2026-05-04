@@ -13,4 +13,5 @@ export { formatCsvPreview } from './preview/format.js';
 export { approveAll, createReview, getApprovedTransactions, loadReview, saveReview, summarizeReview } from './review/reviewFile.js';
 export { loadActualConfig } from './config/actual.js';
 export { createActualBudgetClient } from './adapters/actualBudget.js';
+export { summarizeActualImportResult, withoutConsoleInfo } from './adapters/importResult.js';
 export { createBudgetTools } from './ai/tools.js';
