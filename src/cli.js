@@ -5,7 +5,7 @@ import {
   createActualBudgetClient,
   createCsvPreview,
   createOcrTextPreview,
-  extractTextWithTesseract,
+  extractTextFromImage,
   createReview,
   buildBudgetContext,
   createAIProvider,
@@ -62,7 +62,7 @@ if (command === 'csv:preview') {
     exitWithUsage();
   }
 
-  const text = await extractTextWithTesseract(await readFile(filePath), { filename: filePath });
+  const text = await extractTextFromImage(await readFile(filePath), { filename: filePath });
   console.log(JSON.stringify({ ...createOcrTextPreview(text, options), rawText: text }, null, 2));
 } else if (command === 'csv:review') {
   const { filePath, options, output } = await parseReviewArgs(args);

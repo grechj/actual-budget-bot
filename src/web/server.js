@@ -9,7 +9,7 @@ import {
   createAIProvider,
   createCsvPreview,
   createOcrTextPreview,
-  extractTextWithTesseract,
+  extractTextFromImage,
   formatCsvPreview,
   listAIProviders,
   loadActualConfig,
@@ -78,7 +78,7 @@ async function routeRequest(request, response, options) {
     const file = requireFormFile(form, 'file');
 
     if (file.contentType?.startsWith('image/')) {
-      const text = await extractTextWithTesseract(file.buffer, { filename: file.filename });
+      const text = await extractTextFromImage(file.buffer, { filename: file.filename });
       const preview = createOcrTextPreview(text);
       sendJson(response, 200, {
         ...preview,
