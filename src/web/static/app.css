@@ -78,7 +78,8 @@ p {
 
 .settings,
 article,
-.chat {
+.chat,
+.import-panel {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -116,7 +117,8 @@ textarea {
 }
 
 article,
-.chat {
+.chat,
+.import-panel {
   padding: 16px;
 }
 
@@ -154,14 +156,95 @@ pre {
   white-space: pre-wrap;
 }
 
-.chat {
+.preview {
+  margin-top: 14px;
+}
+
+.preview table {
+  border-collapse: collapse;
+  font-size: 13px;
+  width: 100%;
+}
+
+.preview th,
+.preview td {
+  border-bottom: 1px solid var(--line);
+  padding: 8px 6px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.preview th {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.amount {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.summary-block {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.pill {
+  background: #eaf3f6;
+  border-radius: 999px;
+  color: var(--accent-dark);
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 5px 8px;
+}
+
+.issues {
+  color: var(--bad);
+  font-size: 13px;
+  margin: 10px 0 0;
+  padding-left: 18px;
+}
+
+.empty {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 8px 0 0;
+}
+
+details {
+  margin-top: 12px;
+}
+
+summary {
+  color: var(--accent-dark);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.chat,
+.import-panel {
   margin-top: 16px;
 }
 
 .actions {
   display: flex;
+  gap: 8px;
   justify-content: flex-end;
   margin-top: 10px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+button.danger {
+  background: var(--bad);
 }
 
 .error {

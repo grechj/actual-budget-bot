@@ -48,7 +48,7 @@
             <input id="csvFile" type="file" accept=".csv,text/csv">
             <span>Drop a bank CSV here</span>
           </label>
-          <pre id="csvOutput">No CSV selected.</pre>
+          <div class="preview" id="csvOutput">No CSV selected.</div>
         </article>
 
         <article>
@@ -57,8 +57,20 @@
             <input id="ocrFile" type="file" accept="image/*,.txt,text/plain">
             <span>Drop screenshot or OCR text here</span>
           </label>
-          <pre id="ocrOutput">Drop an image to run local Tesseract OCR, or a text file to parse OCR text.</pre>
+          <div class="preview" id="ocrOutput">Drop an image to run local OCR, or a text file to parse OCR text.</div>
         </article>
+      </section>
+
+      <section class="import-panel">
+        <div>
+          <h2>Import Preview</h2>
+          <p id="activePreview">No parsed transactions ready to import.</p>
+        </div>
+        <div class="actions">
+          <button id="dryRunButton" type="button">Dry run</button>
+          <button id="commitButton" class="danger" type="button">Commit to Actual</button>
+        </div>
+        <div class="preview" id="importOutput">Run a dry run before committing.</div>
       </section>
 
       <section class="chat">
@@ -67,7 +79,7 @@
         <div class="actions">
           <button id="askButton" type="button">Ask AB Bot</button>
         </div>
-        <pre id="chatOutput">Ask a question after choosing an account.</pre>
+        <div class="preview" id="chatOutput">Ask a question after choosing an account.</div>
       </section>
     </main>
     <script src="/assets/app.js"></script>

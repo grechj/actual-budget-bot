@@ -156,7 +156,7 @@ Then open:
 http://127.0.0.1:3000
 ```
 
-The first UI is intentionally small: CSV preview, OCR text/image preview, account selection, and budget chat. On macOS, screenshot OCR tries Apple Vision first and falls back to Tesseract if needed.
+The first UI is intentionally small: CSV preview, OCR text/image preview, account selection, guarded Actual dry-run/commit, and budget chat. On macOS, screenshot OCR tries Apple Vision first and falls back to Tesseract if needed.
 
 ### Phase 5
 

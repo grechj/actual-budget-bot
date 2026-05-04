@@ -10,10 +10,11 @@ import {
   createCsvPreview,
   createOcrTextPreview,
   extractTextFromImage,
-  formatCsvPreview,
   listAIProviders,
   loadActualConfig,
   loadAIConfig,
+  summarizeActualImportResult,
+  withoutConsoleInfo,
 } from '../index.js';
 
 const dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -69,7 +70,7 @@ async function routeRequest(request, response, options) {
     const form = await parseMultipartForm(request);
     const file = requireFormFile(form, 'file');
     const preview = createCsvPreview(file.text);
-    sendJson(response, 200, formatCsvPreview(preview, { limit: 10 }));
+    sendJson(response, 200, preview);
     return;
   }
 
@@ -105,6 +106,40 @@ async function routeRequest(request, response, options) {
       }));
       const aiResponse = await provider.generateResponse(body.question, context);
       sendJson(response, 200, aiResponse);
+    }, options);
+    return;
+  }
+
+  if (request.method === 'POST' && url.pathname === '/api/import') {
+    const body = await readJsonBody(request);
+    const transactions = body.transactions ?? [];
+
+    if (!body.accountId) {
+      sendJson(response, 400, { error: 'Choose an Actual Budget account before importing.' });
+      return;
+    }
+
+    if (!Array.isArray(transactions) || transactions.length === 0) {
+      sendJson(response, 400, { error: 'No preview transactions are available to import.' });
+      return;
+    }
+
+    if (!body.dryRun && body.confirm !== true) {
+      sendJson(response, 400, { error: 'Commit imports require explicit confirmation.' });
+      return;
+    }
+
+    await withActualClient(async (actual) => {
+      const result = await withoutConsoleInfo(() => actual.importTransactions(body.accountId, transactions, {
+        dryRun: body.dryRun !== false,
+        defaultCleared: true,
+        reimportDeleted: false,
+      }));
+      sendJson(response, 200, {
+        dryRun: body.dryRun !== false,
+        attemptedRows: transactions.length,
+        result: summarizeActualImportResult(result),
+      });
     }, options);
     return;
   }

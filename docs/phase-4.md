@@ -82,6 +82,7 @@ The UI is intentionally plain and local:
 - Drag and drop OCR text files for parsing.
 - Drag and drop screenshots to run local Tesseract OCR, then parse the extracted text.
 - Choose an Actual Budget account and chat with the configured AI provider.
+- Review parsed transactions in a table, run an Actual Budget dry run, then explicitly commit.
 
 On macOS, AB Bot tries Apple Vision OCR first through Swift command-line tools. This avoids the heavy Homebrew Tesseract install in most cases.
 
