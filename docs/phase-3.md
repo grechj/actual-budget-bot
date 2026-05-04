@@ -66,7 +66,7 @@ Current providers:
 disabled
 openai
 anthropic (registered, not implemented)
-ollama (registered, not implemented)
+ollama
 ```
 
 The first implemented cloud provider is OpenAI via the Responses API. It uses Node's built-in `fetch`, so no extra OpenAI SDK package is required.
@@ -92,6 +92,26 @@ node src/cli.js ai:ask "What should I pay attention to this month?" --account-id
 ```
 
 The AI command sends a structured budget context to OpenAI. Do not run it against real financial data unless you are comfortable transmitting that summary to OpenAI.
+
+## Local Ollama Provider
+
+Ollama keeps the AI request local to your machine.
+
+Configure:
+
+```bash
+export AB_BOT_AI_PROVIDER=ollama
+export OLLAMA_BASE_URL=http://localhost:11434
+export OLLAMA_MODEL=llama3.1
+```
+
+Ask a question:
+
+```bash
+node src/cli.js ai:ask "What should I pay attention to this month?" --account-id ACCOUNT_ID --start-date 2026-01-01 --end-date 2026-01-31 --provider ollama --model llama3.1
+```
+
+This requires Ollama to be running separately with the selected model available.
 
 ## Design Notes
 

@@ -133,9 +133,13 @@ See [docs/phase-3.md](docs/phase-3.md).
 
 ### Phase 4
 
+- Local Ollama provider: implemented
+- OCR text preview: implemented with deterministic regex parsing
 - OCR screenshot ingestion
 - Confidence scoring
 - Multi-provider AI settings
+
+See [docs/phase-4.md](docs/phase-4.md).
 
 ### Phase 5
 

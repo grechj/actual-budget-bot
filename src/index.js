@@ -1,4 +1,5 @@
 export { createCsvPreview, inferMapping, parseCsv } from './ingestion/csv.js';
+export { createOcrTextPreview, parseOcrTransactionLine } from './ingestion/ocrText.js';
 export {
   canonicalizeTransaction,
   normalizeAmount,
@@ -17,6 +18,7 @@ export { summarizeActualImportResult, withoutConsoleInfo } from './adapters/impo
 export { summarizeBudgetMonth, summarizeTransactions, normalizeActualTransaction } from './budget/summary.js';
 export { buildHistoryIndex, loadCategoryRules, normalizeMerchant, suggestCategories } from './category/suggest.js';
 export { buildBudgetContext } from './ai/context.js';
+export { OllamaProvider } from './ai/ollamaProvider.js';
 export { OpenAIProvider } from './ai/openaiProvider.js';
 export { createAIProvider, listAIProviders, loadAIConfig } from './ai/providerRegistry.js';
 export { createBudgetTools } from './ai/tools.js';

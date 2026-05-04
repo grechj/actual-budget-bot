@@ -4,6 +4,7 @@ import {
   approveAll,
   createActualBudgetClient,
   createCsvPreview,
+  createOcrTextPreview,
   createReview,
   buildBudgetContext,
   createAIProvider,
@@ -46,6 +47,14 @@ if (command === 'csv:preview') {
   console.log(JSON.stringify({ savedPath, profile: name }, null, 2));
 } else if (command === 'profile:list') {
   console.log(JSON.stringify({ profiles: await listMappingProfiles() }, null, 2));
+} else if (command === 'ocr:text-preview') {
+  const { filePath, options } = parseOcrTextPreviewArgs(args);
+  if (!filePath) {
+    exitWithUsage();
+  }
+
+  const text = await readFile(filePath, 'utf8');
+  console.log(JSON.stringify(createOcrTextPreview(text, options), null, 2));
 } else if (command === 'csv:review') {
   const { filePath, options, output } = await parseReviewArgs(args);
   if (!filePath) {
@@ -216,6 +225,22 @@ function parseReviewSummaryArgs(args) {
   }
 
   return { reviewPath, limit };
+}
+
+function parseOcrTextPreviewArgs(args) {
+  let filePath = null;
+  const options = {};
+
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === '--default-direction') {
+      options.defaultDirection = args[index + 1];
+      index += 1;
+    } else if (!filePath) {
+      filePath = args[index];
+    }
+  }
+
+  return { filePath, options };
 }
 
 async function importReviewToActual(args, options) {
@@ -423,6 +448,7 @@ function exitWithUsage() {
       '  ab-bot csv:preview <bank.csv> [--mapping profile.json|--profile name] [--summary] [--limit 10]',
       '  ab-bot profile:save <name> --mapping profile.json',
       '  ab-bot profile:list',
+      '  ab-bot ocr:text-preview <ocr-text.txt> [--default-direction debit|credit]',
       '  ab-bot csv:review <bank.csv> [--mapping profile.json|--profile name] [--out review.json]',
       '  ab-bot review:summary <review.json> [--limit 10]',
       '  ab-bot review:approve-all <review.json>',
@@ -431,7 +457,7 @@ function exitWithUsage() {
       '  ab-bot review:insights <review.json> [--limit 10]',
       '  ab-bot category:suggest <review.json> [--rules rules.json] [--account-id <actual-account-id> --start-date YYYY-MM-DD --end-date YYYY-MM-DD] [--limit 20]',
       '  ab-bot ai:providers',
-      '  ab-bot ai:ask "question" --account-id <actual-account-id> --start-date YYYY-MM-DD --end-date YYYY-MM-DD [--provider disabled|openai] [--model model]',
+      '  ab-bot ai:ask "question" --account-id <actual-account-id> --start-date YYYY-MM-DD --end-date YYYY-MM-DD [--provider disabled|openai|ollama] [--model model]',
       '  ab-bot actual:dry-run <review.json> --account-id <actual-account-id> [--ids]',
       '  ab-bot actual:commit <review.json> --account-id <actual-account-id> --yes [--ids]',
     ].join('\n'),

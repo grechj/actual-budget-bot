@@ -7,7 +7,7 @@ test('lists registered AI providers', () => {
 
   assert.deepEqual(providers.map((provider) => provider.id), ['disabled', 'openai', 'anthropic', 'ollama']);
   assert.equal(providers.find((provider) => provider.id === 'disabled').available, true);
-  assert.equal(providers.find((provider) => provider.id === 'ollama').available, false);
+  assert.equal(providers.find((provider) => provider.id === 'ollama').available, true);
 });
 
 test('loads AI config from env with overrides', () => {
@@ -34,4 +34,17 @@ test('creates disabled provider by default', async () => {
 
 test('unknown AI provider fails clearly', () => {
   assert.throws(() => createAIProvider({ provider: 'mystery' }), /Unknown AI provider/);
+});
+
+test('loads Ollama defaults from env', () => {
+  const config = loadAIConfig({
+    AB_BOT_AI_PROVIDER: 'ollama',
+    OLLAMA_BASE_URL: 'http://localhost:11434',
+  });
+
+  assert.deepEqual(config, {
+    provider: 'ollama',
+    model: 'llama3.1',
+    baseUrl: 'http://localhost:11434',
+  });
 });
