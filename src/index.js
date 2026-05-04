@@ -1,5 +1,6 @@
 export { createCsvPreview, inferMapping, parseCsv } from './ingestion/csv.js';
 export { createOcrTextPreview, parseOcrTransactionLine } from './ingestion/ocrText.js';
+export { extractTextWithTesseract } from './ingestion/tesseract.js';
 export {
   canonicalizeTransaction,
   normalizeAmount,

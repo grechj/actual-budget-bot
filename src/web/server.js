@@ -9,6 +9,7 @@ import {
   createAIProvider,
   createCsvPreview,
   createOcrTextPreview,
+  extractTextWithTesseract,
   formatCsvPreview,
   listAIProviders,
   loadActualConfig,
@@ -77,20 +78,11 @@ async function routeRequest(request, response, options) {
     const file = requireFormFile(form, 'file');
 
     if (file.contentType?.startsWith('image/')) {
+      const text = await extractTextWithTesseract(file.buffer, { filename: file.filename });
+      const preview = createOcrTextPreview(text);
       sendJson(response, 200, {
-        transactions: [],
-        issues: [
-          {
-            severity: 'info',
-            field: 'file',
-            message: 'Image upload works, but image OCR is not wired yet. Tesseract integration is the next step.',
-          },
-        ],
-        summary: {
-          totalLines: 0,
-          importedRows: 0,
-          issueCount: 1,
-        },
+        ...preview,
+        rawText: text,
       });
       return;
     }

@@ -80,5 +80,17 @@ The UI is intentionally plain and local:
 
 - Drag and drop CSV files for preview.
 - Drag and drop OCR text files for parsing.
-- Drag and drop screenshots to confirm upload handling; Tesseract image extraction comes next.
+- Drag and drop screenshots to run local Tesseract OCR, then parse the extracted text.
 - Choose an Actual Budget account and chat with the configured AI provider.
+
+Image OCR requires Tesseract to be installed locally:
+
+```bash
+brew install tesseract
+```
+
+You can also test image OCR from the terminal:
+
+```bash
+node src/cli.js ocr:image-preview screenshot.png
+```

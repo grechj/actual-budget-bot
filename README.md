@@ -156,7 +156,7 @@ Then open:
 http://127.0.0.1:3000
 ```
 
-The first UI is intentionally small: CSV preview, OCR text preview, account selection, and budget chat. Screenshot upload is scaffolded, with Tesseract image OCR planned next.
+The first UI is intentionally small: CSV preview, OCR text/image preview, account selection, and budget chat. Screenshot OCR uses your local Tesseract install.
 
 ### Phase 5
 

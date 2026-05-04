@@ -5,6 +5,7 @@ import {
   createActualBudgetClient,
   createCsvPreview,
   createOcrTextPreview,
+  extractTextWithTesseract,
   createReview,
   buildBudgetContext,
   createAIProvider,
@@ -55,6 +56,14 @@ if (command === 'csv:preview') {
 
   const text = await readFile(filePath, 'utf8');
   console.log(JSON.stringify(createOcrTextPreview(text, options), null, 2));
+} else if (command === 'ocr:image-preview') {
+  const { filePath, options } = parseOcrTextPreviewArgs(args);
+  if (!filePath) {
+    exitWithUsage();
+  }
+
+  const text = await extractTextWithTesseract(await readFile(filePath), { filename: filePath });
+  console.log(JSON.stringify({ ...createOcrTextPreview(text, options), rawText: text }, null, 2));
 } else if (command === 'csv:review') {
   const { filePath, options, output } = await parseReviewArgs(args);
   if (!filePath) {
@@ -472,6 +481,7 @@ function exitWithUsage() {
       '  ab-bot profile:save <name> --mapping profile.json',
       '  ab-bot profile:list',
       '  ab-bot ocr:text-preview <ocr-text.txt> [--default-direction debit|credit]',
+      '  ab-bot ocr:image-preview <screenshot.png> [--default-direction debit|credit]',
       '  ab-bot csv:review <bank.csv> [--mapping profile.json|--profile name] [--out review.json]',
       '  ab-bot review:summary <review.json> [--limit 10]',
       '  ab-bot review:approve-all <review.json>',
