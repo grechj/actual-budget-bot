@@ -3,6 +3,7 @@ const providerSelect = document.querySelector('#provider');
 const modelInput = document.querySelector('#model');
 const startDateInput = document.querySelector('#startDate');
 const endDateInput = document.querySelector('#endDate');
+const csvProfileSelect = document.querySelector('#csvProfile');
 const csvFileInput = document.querySelector('#csvFile');
 const ocrFileInput = document.querySelector('#ocrFile');
 const csvOutput = document.querySelector('#csvOutput');
@@ -18,13 +19,16 @@ document.querySelector('#refreshAccounts').addEventListener('click', loadAccount
 document.querySelector('#askButton').addEventListener('click', askBot);
 document.querySelector('#dryRunButton').addEventListener('click', () => importToActual({ dryRun: true }));
 document.querySelector('#commitButton').addEventListener('click', () => importToActual({ dryRun: false }));
-csvFileInput.addEventListener('change', () => uploadPreview('/api/csv-preview', csvFileInput.files[0], csvOutput, 'CSV'));
+csvFileInput.addEventListener('change', () => uploadPreview('/api/csv-preview', csvFileInput.files[0], csvOutput, 'CSV', {
+  profile: csvProfileSelect.value,
+}));
 ocrFileInput.addEventListener('change', () => uploadPreview('/api/ocr-preview', ocrFileInput.files[0], ocrOutput, 'OCR'));
 
 setupDropzone('#csvDrop', csvFileInput);
 setupDropzone('#ocrDrop', ocrFileInput);
 updateImportButtons();
 loadProviders();
+loadProfiles();
 loadAccounts();
 
 async function loadProviders() {
@@ -59,7 +63,19 @@ async function loadAccounts() {
   }
 }
 
-async function uploadPreview(path, file, output, sourceLabel) {
+async function loadProfiles() {
+  try {
+    const data = await fetchJson('/api/profiles');
+    csvProfileSelect.replaceChildren(
+      optionFor('', 'Auto-detect columns'),
+      ...data.profiles.map((profile) => optionFor(profile.id, profile.name || profile.id)),
+    );
+  } catch (error) {
+    csvProfileSelect.replaceChildren(optionFor('', 'No saved profiles found'));
+  }
+}
+
+async function uploadPreview(path, file, output, sourceLabel, fields = {}) {
   if (!file) {
     return;
   }
@@ -67,6 +83,12 @@ async function uploadPreview(path, file, output, sourceLabel) {
   output.textContent = `Reading ${file.name}...`;
   const form = new FormData();
   form.append('file', file);
+
+  for (const [key, value] of Object.entries(fields)) {
+    if (value) {
+      form.append(key, value);
+    }
+  }
 
   try {
     const response = await fetch(path, { method: 'POST', body: form });
@@ -84,7 +106,7 @@ async function uploadPreview(path, file, output, sourceLabel) {
     renderPreview(output, data, { sourceLabel, fileName: file.name });
     setActivePreview();
   } catch (error) {
-    output.textContent = error.message;
+    output.replaceChildren(emptyState(error.message));
   }
 }
 

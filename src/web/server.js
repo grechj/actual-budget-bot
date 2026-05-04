@@ -10,9 +10,11 @@ import {
   createCsvPreview,
   createOcrTextPreview,
   extractTextFromImage,
+  listMappingProfiles,
   listAIProviders,
   loadActualConfig,
   loadAIConfig,
+  resolveMappingProfile,
   summarizeActualImportResult,
   withoutConsoleInfo,
 } from '../index.js';
@@ -59,6 +61,11 @@ async function routeRequest(request, response, options) {
     return;
   }
 
+  if (request.method === 'GET' && url.pathname === '/api/profiles') {
+    sendJson(response, 200, { profiles: await listMappingProfiles() });
+    return;
+  }
+
   if (request.method === 'GET' && url.pathname === '/api/accounts') {
     await withActualClient(async (actual) => {
       sendJson(response, 200, { accounts: await actual.getAccounts() });
@@ -69,7 +76,17 @@ async function routeRequest(request, response, options) {
   if (request.method === 'POST' && url.pathname === '/api/csv-preview') {
     const form = await parseMultipartForm(request);
     const file = requireFormFile(form, 'file');
-    const preview = createCsvPreview(file.text);
+    const profileName = form.profile?.text?.trim();
+    const options = {};
+
+    if (profileName) {
+      const profile = await resolveMappingProfile(profileName);
+      options.mapping = profile.mapping;
+      options.delimiter = profile.delimiter ?? undefined;
+      options.hasHeader = profile.hasHeader ?? undefined;
+    }
+
+    const preview = createCsvPreview(file.text, options);
     sendJson(response, 200, preview);
     return;
   }

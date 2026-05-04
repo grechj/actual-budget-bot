@@ -100,6 +100,10 @@ label {
   gap: 6px;
 }
 
+.inline-field {
+  margin-bottom: 12px;
+}
+
 input,
 select,
 textarea {
