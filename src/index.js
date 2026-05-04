@@ -18,4 +18,5 @@ export { summarizeBudgetMonth, summarizeTransactions, normalizeActualTransaction
 export { buildHistoryIndex, loadCategoryRules, normalizeMerchant, suggestCategories } from './category/suggest.js';
 export { buildBudgetContext } from './ai/context.js';
 export { OpenAIProvider } from './ai/openaiProvider.js';
+export { createAIProvider, listAIProviders, loadAIConfig } from './ai/providerRegistry.js';
 export { createBudgetTools } from './ai/tools.js';

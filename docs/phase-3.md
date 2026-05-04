@@ -52,18 +52,43 @@ It does not write categories back to the review file yet.
 
 ## First AI Provider
 
-The first provider is OpenAI via the Responses API. It uses Node's built-in `fetch`, so no extra OpenAI SDK package is required.
+AB Bot has a small provider registry.
+
+List providers:
+
+```bash
+node src/cli.js ai:providers
+```
+
+Current providers:
+
+```plaintext
+disabled
+openai
+anthropic (registered, not implemented)
+ollama (registered, not implemented)
+```
+
+The first implemented cloud provider is OpenAI via the Responses API. It uses Node's built-in `fetch`, so no extra OpenAI SDK package is required.
 
 It is optional and requires:
 
 ```bash
 export OPENAI_API_KEY="your-api-key"
+export AB_BOT_AI_PROVIDER=openai
+export AB_BOT_AI_MODEL=gpt-5.2
 ```
 
 Ask a budget question:
 
 ```bash
 node src/cli.js ai:ask "What should I pay attention to this month?" --account-id ACCOUNT_ID --start-date 2026-01-01 --end-date 2026-01-31
+```
+
+Or choose the provider/model per command:
+
+```bash
+node src/cli.js ai:ask "What should I pay attention to this month?" --account-id ACCOUNT_ID --start-date 2026-01-01 --end-date 2026-01-31 --provider openai --model gpt-5.2
 ```
 
 The AI command sends a structured budget context to OpenAI. Do not run it against real financial data unless you are comfortable transmitting that summary to OpenAI.

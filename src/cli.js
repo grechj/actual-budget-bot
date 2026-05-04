@@ -6,10 +6,12 @@ import {
   createCsvPreview,
   createReview,
   buildBudgetContext,
+  createAIProvider,
   formatCsvPreview,
   getApprovedTransactions,
   listMappingProfiles,
   loadActualConfig,
+  loadAIConfig,
   loadCategoryRules,
   loadMappingProfile,
   loadReview,
@@ -20,7 +22,7 @@ import {
   summarizeActualImportResult,
   summarizeTransactions,
   suggestCategories,
-  OpenAIProvider,
+  listAIProviders,
   withoutConsoleInfo,
 } from './index.js';
 
@@ -93,6 +95,8 @@ if (command === 'csv:preview') {
   }, null, 2));
 } else if (command === 'ai:ask') {
   await askAi(args);
+} else if (command === 'ai:providers') {
+  console.log(JSON.stringify({ providers: listAIProviders() }, null, 2));
 } else if (command === 'actual:dry-run') {
   await importReviewToActual(args, { dryRun: true });
 } else if (command === 'actual:commit') {
@@ -369,7 +373,7 @@ function parseOptionalDateRangeAccountArgs(args) {
 }
 
 async function askAi(args) {
-  const { accountId, startDate, endDate, question } = parseDateRangeAccountArgs(args);
+  const { accountId, startDate, endDate, question, provider, model } = parseAiAskArgs(args);
 
   if (!question) {
     exitWithUsage();
@@ -377,10 +381,28 @@ async function askAi(args) {
 
   await withActualClient(async (actual) => {
     const context = await buildBudgetContext(actual, { accountId, startDate, endDate });
-    const provider = new OpenAIProvider();
-    const response = await provider.generateResponse(question, context);
+    const aiProvider = createAIProvider(loadAIConfig(process.env, { provider, model }));
+    const response = await aiProvider.generateResponse(question, context);
     console.log(JSON.stringify(response, null, 2));
   });
+}
+
+function parseAiAskArgs(args) {
+  const parsed = parseDateRangeAccountArgs(args);
+  let provider = null;
+  let model = null;
+
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === '--provider') {
+      provider = args[index + 1];
+      index += 1;
+    } else if (args[index] === '--model') {
+      model = args[index + 1];
+      index += 1;
+    }
+  }
+
+  return { ...parsed, provider, model };
 }
 
 async function withActualClient(task) {
@@ -408,7 +430,8 @@ function exitWithUsage() {
       '  ab-bot actual:summary --account-id <actual-account-id> --start-date YYYY-MM-DD --end-date YYYY-MM-DD',
       '  ab-bot review:insights <review.json> [--limit 10]',
       '  ab-bot category:suggest <review.json> [--rules rules.json] [--account-id <actual-account-id> --start-date YYYY-MM-DD --end-date YYYY-MM-DD] [--limit 20]',
-      '  ab-bot ai:ask "question" --account-id <actual-account-id> --start-date YYYY-MM-DD --end-date YYYY-MM-DD',
+      '  ab-bot ai:providers',
+      '  ab-bot ai:ask "question" --account-id <actual-account-id> --start-date YYYY-MM-DD --end-date YYYY-MM-DD [--provider disabled|openai] [--model model]',
       '  ab-bot actual:dry-run <review.json> --account-id <actual-account-id> [--ids]',
       '  ab-bot actual:commit <review.json> --account-id <actual-account-id> --yes [--ids]',
     ].join('\n'),

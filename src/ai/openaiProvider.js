@@ -3,7 +3,7 @@ import { AIProvider } from './provider.js';
 export class OpenAIProvider extends AIProvider {
   constructor(options = {}) {
     super();
-    this.model = options.model || process.env.OPENAI_MODEL || 'gpt-5.2';
+    this.model = options.model || process.env.AB_BOT_AI_MODEL || process.env.OPENAI_MODEL || 'gpt-5.2';
     this.createResponse = options.createResponse || createDefaultResponse;
   }
 
@@ -38,6 +38,7 @@ export class OpenAIProvider extends AIProvider {
       content: response.output_text || extractOutputText(response),
       usage: response.usage || null,
       model: this.model,
+      provider: 'openai',
     };
   }
 }

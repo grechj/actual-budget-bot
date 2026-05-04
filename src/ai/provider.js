@@ -5,10 +5,17 @@ export class AIProvider {
 }
 
 export class DisabledAIProvider extends AIProvider {
+  constructor(options = {}) {
+    super();
+    this.model = options.model || null;
+  }
+
   async generateResponse() {
     return {
       content: 'AI is not configured yet. AB Bot can still import, review, and summarize structured budget data locally.',
       usage: null,
+      model: this.model,
+      provider: 'disabled',
     };
   }
 }

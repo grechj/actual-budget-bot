@@ -127,6 +127,7 @@ See [docs/phase-2.md](docs/phase-2.md).
 - Category suggestion engine: implemented
 - First AI provider: implemented for OpenAI Responses API
 - Local category rules: implemented
+- AI provider registry: implemented
 
 See [docs/phase-3.md](docs/phase-3.md).
 
