@@ -16,6 +16,20 @@ node src/cli.js ai:ask "What should I pay attention to this month?" --account-id
 
 Ollama must be running separately, and the selected model must already be available locally.
 
+List local Ollama models:
+
+```bash
+node src/cli.js ai:ollama-models
+```
+
+If AB Bot says the selected model is not installed, either pull it:
+
+```bash
+ollama pull llama3.1
+```
+
+Or use one of the model names from `ai:ollama-models`. On older laptops, a smaller local model is usually a better first test.
+
 ## OCR Text Preview
 
 The first OCR step is deliberately deterministic: AB Bot parses OCR text with exact regular-expression patterns before any AI is involved. This keeps token usage low and makes the parsing behavior easy to test.

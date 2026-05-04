@@ -35,3 +35,26 @@ test('Ollama provider sends structured budget context to chat API shape', async 
   assert.equal(calls[0].body.stream, false);
   assert.match(calls[0].body.messages[1].content, /Structured budget context/);
 });
+
+test('Ollama provider lists local models from tags response', async () => {
+  const provider = new OllamaProvider({
+    baseUrl: 'http://localhost:11434',
+    listModelsResponse: async () => ({
+      models: [
+        {
+          name: 'small-local-model',
+          size: 12345,
+          modified_at: '2026-01-01T00:00:00Z',
+        },
+      ],
+    }),
+  });
+
+  assert.deepEqual(await provider.listModels(), [
+    {
+      name: 'small-local-model',
+      size: 12345,
+      modifiedAt: '2026-01-01T00:00:00Z',
+    },
+  ]);
+});

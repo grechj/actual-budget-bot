@@ -106,6 +106,8 @@ if (command === 'csv:preview') {
   await askAi(args);
 } else if (command === 'ai:providers') {
   console.log(JSON.stringify({ providers: listAIProviders() }, null, 2));
+} else if (command === 'ai:ollama-models') {
+  await listOllamaModels(args);
 } else if (command === 'actual:dry-run') {
   await importReviewToActual(args, { dryRun: true });
 } else if (command === 'actual:commit') {
@@ -412,6 +414,27 @@ async function askAi(args) {
   });
 }
 
+async function listOllamaModels(args) {
+  const { baseUrl } = parseOllamaModelsArgs(args);
+  const provider = createAIProvider(loadAIConfig(process.env, { provider: 'ollama', baseUrl }));
+  const models = await provider.listModels();
+
+  console.log(JSON.stringify({ provider: 'ollama', baseUrl: provider.baseUrl, models }, null, 2));
+}
+
+function parseOllamaModelsArgs(args) {
+  let baseUrl = null;
+
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === '--base-url') {
+      baseUrl = args[index + 1];
+      index += 1;
+    }
+  }
+
+  return { baseUrl };
+}
+
 function parseAiAskArgs(args) {
   const parsed = parseDateRangeAccountArgs(args);
   let provider = null;
@@ -457,6 +480,7 @@ function exitWithUsage() {
       '  ab-bot review:insights <review.json> [--limit 10]',
       '  ab-bot category:suggest <review.json> [--rules rules.json] [--account-id <actual-account-id> --start-date YYYY-MM-DD --end-date YYYY-MM-DD] [--limit 20]',
       '  ab-bot ai:providers',
+      '  ab-bot ai:ollama-models [--base-url http://localhost:11434]',
       '  ab-bot ai:ask "question" --account-id <actual-account-id> --start-date YYYY-MM-DD --end-date YYYY-MM-DD [--provider disabled|openai|ollama] [--model model]',
       '  ab-bot actual:dry-run <review.json> --account-id <actual-account-id> [--ids]',
       '  ab-bot actual:commit <review.json> --account-id <actual-account-id> --yes [--ids]',
