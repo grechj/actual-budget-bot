@@ -101,6 +101,12 @@ Dry-run import approved rows:
 node src/cli.js actual:dry-run .ab-bot/reviews/review-YYYYMMDDHHMMSS.json --account-id ACCOUNT_ID
 ```
 
+By default this prints counts only. To include Actual transaction IDs in the result:
+
+```bash
+node src/cli.js actual:dry-run .ab-bot/reviews/review-YYYYMMDDHHMMSS.json --account-id ACCOUNT_ID --ids
+```
+
 ## Actual Budget Commit
 
 Commit requires an explicit `--yes` flag:
@@ -108,6 +114,8 @@ Commit requires an explicit `--yes` flag:
 ```bash
 node src/cli.js actual:commit .ab-bot/reviews/review-YYYYMMDDHHMMSS.json --account-id ACCOUNT_ID --yes
 ```
+
+Use `--ids` on commit only when you need the generated Actual transaction IDs in the terminal output.
 
 The Actual API call uses:
 

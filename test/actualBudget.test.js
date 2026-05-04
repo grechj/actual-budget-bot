@@ -59,8 +59,24 @@ test('summarizes Actual import results without transaction details', () => {
     addedCount: 2,
     updatedCount: 1,
     updatedPreviewCount: 0,
-    added: ['transaction-id-1', 'transaction-id-2'],
-    updated: ['transaction-id-3'],
+  });
+});
+
+test('can include Actual transaction IDs when requested', () => {
+  const result = summarizeActualImportResult({
+    errors: [],
+    added: ['transaction-id-1'],
+    updated: ['transaction-id-2'],
+    updatedPreview: [],
+  }, { includeIds: true });
+
+  assert.deepEqual(result, {
+    errors: [],
+    addedCount: 1,
+    updatedCount: 1,
+    updatedPreviewCount: 0,
+    added: ['transaction-id-1'],
+    updated: ['transaction-id-2'],
     updatedPreview: [],
   });
 });

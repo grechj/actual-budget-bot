@@ -192,7 +192,7 @@ function parseReviewSummaryArgs(args) {
 }
 
 async function importReviewToActual(args, options) {
-  const { reviewPath, accountId, yes } = parseActualImportArgs(args);
+  const { reviewPath, accountId, yes, includeIds } = parseActualImportArgs(args);
 
   if (!options.dryRun && !yes) {
     throw new Error('actual:commit requires --yes so transaction writes are explicit.');
@@ -214,7 +214,7 @@ async function importReviewToActual(args, options) {
     console.log(JSON.stringify({
       dryRun: options.dryRun,
       attemptedRows: transactions.length,
-      result: summarizeActualImportResult(result),
+      result: summarizeActualImportResult(result, { includeIds }),
     }, null, 2));
   });
 }
@@ -223,6 +223,7 @@ function parseActualImportArgs(args) {
   const reviewPath = args[0];
   let accountId = null;
   let yes = false;
+  let includeIds = false;
 
   for (let index = 1; index < args.length; index += 1) {
     if (args[index] === '--account-id') {
@@ -230,6 +231,8 @@ function parseActualImportArgs(args) {
       index += 1;
     } else if (args[index] === '--yes') {
       yes = true;
+    } else if (args[index] === '--ids') {
+      includeIds = true;
     }
   }
 
@@ -237,7 +240,7 @@ function parseActualImportArgs(args) {
     exitWithUsage();
   }
 
-  return { reviewPath, accountId, yes };
+  return { reviewPath, accountId, yes, includeIds };
 }
 
 async function withActualClient(task) {
@@ -262,8 +265,8 @@ function exitWithUsage() {
       '  ab-bot review:summary <review.json> [--limit 10]',
       '  ab-bot review:approve-all <review.json>',
       '  ab-bot actual:accounts',
-      '  ab-bot actual:dry-run <review.json> --account-id <actual-account-id>',
-      '  ab-bot actual:commit <review.json> --account-id <actual-account-id> --yes',
+      '  ab-bot actual:dry-run <review.json> --account-id <actual-account-id> [--ids]',
+      '  ab-bot actual:commit <review.json> --account-id <actual-account-id> --yes [--ids]',
     ].join('\n'),
   );
   process.exit(1);

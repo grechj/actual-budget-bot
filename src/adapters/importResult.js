@@ -1,13 +1,18 @@
-export function summarizeActualImportResult(result) {
-  return {
+export function summarizeActualImportResult(result, options = {}) {
+  const summary = {
     errors: result.errors ?? [],
     addedCount: result.added?.length ?? 0,
     updatedCount: result.updated?.length ?? 0,
     updatedPreviewCount: result.updatedPreview?.length ?? 0,
-    added: result.added ?? [],
-    updated: result.updated ?? [],
-    updatedPreview: result.updatedPreview ?? [],
   };
+
+  if (options.includeIds) {
+    summary.added = result.added ?? [];
+    summary.updated = result.updated ?? [];
+    summary.updatedPreview = result.updatedPreview ?? [];
+  }
+
+  return summary;
 }
 
 export async function withoutConsoleInfo(task) {

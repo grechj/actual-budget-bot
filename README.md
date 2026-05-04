@@ -117,6 +117,7 @@ Actual budget IDs are available in Actual's advanced settings.
 - Review/edit workflow: implemented
 - Actual dry-run import: implemented as a guarded CLI command
 - Actual commit import: implemented with explicit `--yes`
+- Actual import output: count-only by default, with optional `--ids`
 
 See [docs/phase-2.md](docs/phase-2.md).
 
