@@ -123,9 +123,11 @@ See [docs/phase-2.md](docs/phase-2.md).
 
 ### Phase 3
 
-- Budget summary tools
-- Category suggestion engine
-- First AI provider
+- Budget summary tools: implemented
+- Category suggestion engine: implemented
+- First AI provider: implemented for OpenAI Responses API
+
+See [docs/phase-3.md](docs/phase-3.md).
 
 ### Phase 4
 

@@ -5,6 +5,7 @@ import {
   createActualBudgetClient,
   createCsvPreview,
   createReview,
+  buildBudgetContext,
   formatCsvPreview,
   getApprovedTransactions,
   listMappingProfiles,
@@ -16,6 +17,9 @@ import {
   saveReview,
   summarizeReview,
   summarizeActualImportResult,
+  summarizeTransactions,
+  suggestCategories,
+  OpenAIProvider,
   withoutConsoleInfo,
 } from './index.js';
 
@@ -70,6 +74,16 @@ if (command === 'csv:preview') {
   await withActualClient(async (actual) => {
     console.log(JSON.stringify({ accounts: await actual.getAccounts() }, null, 2));
   });
+} else if (command === 'actual:summary') {
+  const { accountId, startDate, endDate } = parseDateRangeAccountArgs(args);
+  await withActualClient(async (actual) => {
+    const transactions = await actual.getTransactions(accountId, startDate, endDate);
+    console.log(JSON.stringify(summarizeTransactions(transactions), null, 2));
+  });
+} else if (command === 'category:suggest') {
+  await suggestReviewCategories(args);
+} else if (command === 'ai:ask') {
+  await askAi(args);
 } else if (command === 'actual:dry-run') {
   await importReviewToActual(args, { dryRun: true });
 } else if (command === 'actual:commit') {
@@ -243,6 +257,84 @@ function parseActualImportArgs(args) {
   return { reviewPath, accountId, yes, includeIds };
 }
 
+function parseDateRangeAccountArgs(args) {
+  let accountId = null;
+  let startDate = null;
+  let endDate = null;
+  let question = null;
+
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === '--account-id') {
+      accountId = args[index + 1];
+      index += 1;
+    } else if (args[index] === '--start-date') {
+      startDate = args[index + 1];
+      index += 1;
+    } else if (args[index] === '--end-date') {
+      endDate = args[index + 1];
+      index += 1;
+    } else if (!question) {
+      question = args[index];
+    }
+  }
+
+  if (!accountId || !startDate || !endDate) {
+    exitWithUsage();
+  }
+
+  return { accountId, startDate, endDate, question };
+}
+
+async function suggestReviewCategories(args) {
+  const reviewPath = args[0];
+  const { accountId, startDate, endDate, limit } = parseSuggestionArgs(args.slice(1));
+
+  if (!reviewPath) {
+    exitWithUsage();
+  }
+
+  const review = await loadReview(reviewPath);
+  await withActualClient(async (actual) => {
+    const history = await actual.getTransactions(accountId, startDate, endDate);
+    console.log(JSON.stringify({
+      reviewPath,
+      suggestions: suggestCategories(review.transactions, history, { limit }),
+    }, null, 2));
+  });
+}
+
+function parseSuggestionArgs(args) {
+  const parsed = parseDateRangeAccountArgs(args);
+  let limit = 20;
+
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === '--limit') {
+      limit = Number.parseInt(args[index + 1], 10);
+      if (!Number.isInteger(limit) || limit < 0) {
+        throw new Error('--limit requires a non-negative number.');
+      }
+      index += 1;
+    }
+  }
+
+  return { ...parsed, limit };
+}
+
+async function askAi(args) {
+  const { accountId, startDate, endDate, question } = parseDateRangeAccountArgs(args);
+
+  if (!question) {
+    exitWithUsage();
+  }
+
+  await withActualClient(async (actual) => {
+    const context = await buildBudgetContext(actual, { accountId, startDate, endDate });
+    const provider = new OpenAIProvider();
+    const response = await provider.generateResponse(question, context);
+    console.log(JSON.stringify(response, null, 2));
+  });
+}
+
 async function withActualClient(task) {
   const actual = await createActualBudgetClient(loadActualConfig());
 
@@ -265,6 +357,9 @@ function exitWithUsage() {
       '  ab-bot review:summary <review.json> [--limit 10]',
       '  ab-bot review:approve-all <review.json>',
       '  ab-bot actual:accounts',
+      '  ab-bot actual:summary --account-id <actual-account-id> --start-date YYYY-MM-DD --end-date YYYY-MM-DD',
+      '  ab-bot category:suggest <review.json> --account-id <actual-account-id> --start-date YYYY-MM-DD --end-date YYYY-MM-DD [--limit 20]',
+      '  ab-bot ai:ask "question" --account-id <actual-account-id> --start-date YYYY-MM-DD --end-date YYYY-MM-DD',
       '  ab-bot actual:dry-run <review.json> --account-id <actual-account-id> [--ids]',
       '  ab-bot actual:commit <review.json> --account-id <actual-account-id> --yes [--ids]',
     ].join('\n'),
