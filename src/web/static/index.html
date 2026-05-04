@@ -83,6 +83,15 @@
           <h2>Import Preview</h2>
           <p id="activePreview">No parsed transactions ready to import.</p>
         </div>
+        <div class="import-settings">
+          <label>
+            Default category
+            <select id="defaultCategory">
+              <option value="">Leave uncategorised</option>
+            </select>
+          </label>
+          <p>Applies to this whole batch unless a transaction already has a category.</p>
+        </div>
         <div class="actions">
           <button id="dryRunButton" type="button">Dry run</button>
           <button id="commitButton" class="danger" type="button">Commit to Actual</button>

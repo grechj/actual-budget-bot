@@ -4,6 +4,7 @@ const modelInput = document.querySelector('#model');
 const startDateInput = document.querySelector('#startDate');
 const endDateInput = document.querySelector('#endDate');
 const csvProfileSelect = document.querySelector('#csvProfile');
+const defaultCategorySelect = document.querySelector('#defaultCategory');
 const csvFileInput = document.querySelector('#csvFile');
 const ocrFileInput = document.querySelector('#ocrFile');
 const csvOutput = document.querySelector('#csvOutput');
@@ -37,6 +38,7 @@ refreshConnections();
 async function refreshConnections() {
   await loadStatus().catch(() => {});
   await loadAccounts();
+  await loadCategories();
 }
 
 async function loadStatus() {
@@ -127,6 +129,29 @@ async function loadAccounts() {
     accountSelect.disabled = false;
     updateImportButtons();
   }
+}
+
+async function loadCategories() {
+  defaultCategorySelect.disabled = true;
+  defaultCategorySelect.replaceChildren(optionFor('', 'Loading categories...'));
+
+  try {
+    const data = await fetchJson('/api/categories');
+    defaultCategorySelect.replaceChildren(
+      optionFor('', 'Leave uncategorised'),
+      ...categoryOptions(data.categories ?? []),
+    );
+  } catch (error) {
+    defaultCategorySelect.replaceChildren(optionFor('', 'Categories unavailable'));
+  } finally {
+    defaultCategorySelect.disabled = false;
+  }
+}
+
+function categoryOptions(categories) {
+  return categories
+    .filter((category) => !category.hidden)
+    .map((category) => optionFor(category.id, category.group ? `${category.group} / ${category.name}` : category.name));
 }
 
 function setActualStatus(actualStatus) {
@@ -298,6 +323,7 @@ async function importToActual({ dryRun }) {
   }
 
   importOutput.textContent = dryRun ? 'Running dry run...' : 'Committing to Actual...';
+  const transactions = transactionsForImport();
 
   try {
     const response = await fetch('/api/import', {
@@ -305,7 +331,7 @@ async function importToActual({ dryRun }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         accountId: accountSelect.value,
-        transactions: currentPreview.transactions,
+        transactions,
         dryRun,
         confirm: !dryRun,
       }),
@@ -321,6 +347,17 @@ async function importToActual({ dryRun }) {
   } catch (error) {
     importOutput.textContent = error.message;
   }
+}
+
+function transactionsForImport() {
+  if (!defaultCategorySelect.value) {
+    return currentPreview.transactions;
+  }
+
+  return currentPreview.transactions.map((transaction) => ({
+    ...transaction,
+    category: transaction.category || defaultCategorySelect.value,
+  }));
 }
 
 function renderImportResult(data) {

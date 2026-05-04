@@ -331,6 +331,19 @@ summary {
   margin-top: 16px;
 }
 
+.import-settings {
+  align-items: end;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(220px, 360px) 1fr;
+  margin-top: 12px;
+}
+
+.import-settings p {
+  font-size: 13px;
+  margin: 0;
+}
+
 .actions {
   display: flex;
   gap: 8px;
@@ -363,6 +376,7 @@ button.danger {
 
   .settings,
   .status-grid,
+  .import-settings,
   .grid {
     grid-template-columns: 1fr;
   }

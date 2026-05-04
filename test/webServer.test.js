@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseMultipartBuffer } from '../src/web/server.js';
+import { normalizeCategories, parseMultipartBuffer } from '../src/web/server.js';
 
 test('parses a simple multipart file upload', () => {
   const boundary = 'ab-bot-boundary';
@@ -42,4 +42,23 @@ test('parses multipart text fields alongside files', () => {
 
   assert.equal(form.profile.text, 'commbank-no-header');
   assert.equal(form.file.filename, 'sample.csv');
+});
+
+test('normalizes Actual category groups for the web UI', () => {
+  const categories = normalizeCategories([
+    {
+      name: 'Everyday',
+      categories: [
+        { id: 'cat-food', name: 'Food' },
+        { id: 'cat-fuel', name: 'Fuel', hidden: true },
+      ],
+    },
+    { id: 'cat-income', name: 'Income', groupName: 'Income' },
+  ]);
+
+  assert.deepEqual(categories, [
+    { id: 'cat-food', name: 'Food', group: 'Everyday', hidden: false },
+    { id: 'cat-fuel', name: 'Fuel', group: 'Everyday', hidden: true },
+    { id: 'cat-income', name: 'Income', group: 'Income', hidden: false },
+  ]);
 });

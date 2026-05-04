@@ -84,6 +84,13 @@ async function routeRequest(request, response, options) {
     return;
   }
 
+  if (request.method === 'GET' && url.pathname === '/api/categories') {
+    await withActualClient(async (actual) => {
+      sendJson(response, 200, { categories: normalizeCategories(await actual.getCategories()) });
+    }, options);
+    return;
+  }
+
   if (request.method === 'POST' && url.pathname === '/api/csv-preview') {
     const form = await parseMultipartForm(request);
     const file = requireFormFile(form, 'file');
@@ -173,6 +180,29 @@ async function routeRequest(request, response, options) {
   }
 
   sendJson(response, 404, { error: 'Not found' });
+}
+
+export function normalizeCategories(categories) {
+  if (!Array.isArray(categories)) {
+    return [];
+  }
+
+  return categories.flatMap((categoryOrGroup) => {
+    if (Array.isArray(categoryOrGroup.categories)) {
+      return categoryOrGroup.categories.map((category) => normalizeCategory(category, categoryOrGroup));
+    }
+
+    return [normalizeCategory(categoryOrGroup)];
+  }).filter((category) => category.id && category.name);
+}
+
+function normalizeCategory(category, group = null) {
+  return {
+    id: category.id,
+    name: category.name,
+    group: category.group || category.groupName || group?.name || null,
+    hidden: Boolean(category.hidden || category.isHidden),
+  };
 }
 
 export async function getWebStatus(options = {}) {
