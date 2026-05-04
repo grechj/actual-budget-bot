@@ -2,6 +2,8 @@
 
 AB Bot is a local-first companion for [Actual Budget](https://actualbudget.org/). It helps preview messy bank CSVs, parse banking screenshots, review transactions, import into Actual, and ask simple questions about your budget without replacing Actual as the source of truth.
 
+![AB Bot local web UI showing setup status, CSV preview, per-row categories, OCR upload, and guarded Actual import controls](docs/assets/ab-bot-web-ui.png)
+
 ## Privacy First
 
 AB Bot runs locally by default. CSV files, screenshots, OCR text, previews, and Actual Budget data stay on your machine unless you deliberately configure a cloud AI provider such as OpenAI.
