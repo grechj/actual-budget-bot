@@ -185,7 +185,7 @@ export async function getWebStatus(options = {}) {
       ok: false,
       label: 'Actual Budget',
       message: actualConfig.budgetId
-        ? 'Configured, checking connection...'
+        ? 'Configured. Account loading will check the budget connection.'
         : 'Set ACTUAL_BUDGET_ID to load a budget.',
       details: actualConfig.serverURL || 'No server URL set',
     },
@@ -228,27 +228,6 @@ export async function getWebStatus(options = {}) {
       message: 'Could not read saved profiles.',
       details: error.message,
     };
-  }
-
-  if (actualConfig.budgetId) {
-    try {
-      await withActualClient(async (actual) => {
-        const accounts = await actual.getAccounts();
-        status.actual = {
-          ok: true,
-          label: 'Actual Budget',
-          message: `Budget loaded with ${accounts.length} account${accounts.length === 1 ? '' : 's'}.`,
-          details: actualConfig.serverURL || 'Local Actual API',
-        };
-      }, options);
-    } catch (error) {
-      status.actual = {
-        ok: false,
-        label: 'Actual Budget',
-        message: 'Could not load the configured budget.',
-        details: error.message,
-      };
-    }
   }
 
   return status;

@@ -15,6 +15,7 @@ const questionInput = document.querySelector('#question');
 const statusGrid = document.querySelector('#statusGrid');
 
 let currentPreview = null;
+let currentStatus = null;
 
 document.querySelector('#refreshAccounts').addEventListener('click', refreshConnections);
 document.querySelector('#refreshStatus').addEventListener('click', loadStatus);
@@ -43,6 +44,7 @@ async function loadStatus() {
 
   try {
     const data = await fetchJson('/api/status');
+    currentStatus = data;
     renderStatus(data);
   } catch (error) {
     statusGrid.replaceChildren(statusCard('AB Bot', {
@@ -98,17 +100,49 @@ async function loadAccounts() {
 
   try {
     const data = await fetchJson('/api/accounts');
+    setActualStatus({
+      ok: true,
+      label: 'Actual Budget',
+      message: `Budget loaded with ${data.accounts.length} account${data.accounts.length === 1 ? '' : 's'}.`,
+      details: 'Connected',
+    });
     accountSelect.replaceChildren(
       optionFor('', 'Choose an account'),
       ...data.accounts.map((account) => optionFor(account.id, account.name)),
     );
   } catch (error) {
+    setActualStatus({
+      ok: false,
+      label: 'Actual Budget',
+      message: isRateLimitError(error)
+        ? 'Actual is temporarily rate-limiting login attempts.'
+        : 'Could not load the configured budget.',
+      details: isRateLimitError(error)
+        ? 'Wait a minute, then refresh accounts.'
+        : error.message,
+    });
     accountSelect.replaceChildren(optionFor('', 'Actual Budget is not connected'));
     chatOutput.textContent = error.message;
   } finally {
     accountSelect.disabled = false;
     updateImportButtons();
   }
+}
+
+function setActualStatus(actualStatus) {
+  if (!currentStatus) {
+    return;
+  }
+
+  currentStatus = {
+    ...currentStatus,
+    actual: actualStatus,
+  };
+  renderStatus(currentStatus);
+}
+
+function isRateLimitError(error) {
+  return /too-many-requests/i.test(error.message);
 }
 
 async function loadProfiles() {
