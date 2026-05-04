@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadDotEnv } from '../config/envFile.js';
 import {
   buildBudgetContext,
   createActualBudgetClient,
@@ -18,6 +19,8 @@ import {
   summarizeActualImportResult,
   withoutConsoleInfo,
 } from '../index.js';
+
+await loadDotEnv();
 
 const dirname = fileURLToPath(new URL('.', import.meta.url));
 const staticDir = join(dirname, 'static');

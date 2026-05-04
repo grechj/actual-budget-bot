@@ -10,42 +10,54 @@ Use `AB_BOT_AI_PROVIDER=disabled` or `AB_BOT_AI_PROVIDER=ollama` if you want to 
 
 ## Quickstart
 
-1. Clone and install:
+### From GitHub
 
 ```bash
 git clone https://github.com/grechj/actual-budget-bot.git
 cd actual-budget-bot
 npm install
+npm run setup
+npm run doctor
+npm run web
 ```
 
-2. Copy the example environment file:
+Open `http://127.0.0.1:3000`. The status panel should show whether Actual, CSV profiles, OCR, and AI are ready.
+
+### As a CLI
+
+After the package is published to npm, the intended install flow is:
 
 ```bash
-cp .env.example .env
+npm install --global ab-bot
+ab-bot setup
+ab-bot doctor
+ab-bot web
 ```
 
-3. Start or open your local Actual Budget server. If you use the npm sync server:
+You can also run it with `npx ab-bot setup` once published.
+
+The setup wizard writes a private local `.env` file. It checks for the Actual Budget sync server, can offer to install it, asks for your Actual server details, lets you choose disabled/Ollama/OpenAI AI mode, and records OCR settings.
+
+If you are running from a cloned repo before the npm package is published, use `node src/cli.js ...` anywhere this README says `ab-bot ...`.
+
+## Actual Budget Server
+
+AB Bot is a companion app. Actual Budget still needs to be running separately.
+
+If you use the npm sync server:
 
 ```bash
 npm install --location=global @actual-app/sync-server
 ACTUAL_DATA_DIR=.ab-bot/actual-server actual-server
 ```
 
-4. In Actual, create a test budget or open an existing one. Copy the **Sync ID** from Settings -> Advanced, then set these values in `.env`:
+In Actual, create a test budget or open an existing one. Copy the **Sync ID** from Settings -> Advanced. The setup wizard will ask for:
 
 ```env
 ACTUAL_SERVER_URL=http://localhost:5006
 ACTUAL_PASSWORD=your-local-actual-password
 ACTUAL_BUDGET_ID=your-budget-sync-id
 ```
-
-5. Start the local AB Bot UI:
-
-```bash
-npm run web
-```
-
-Open `http://127.0.0.1:3000`. The status panel should show whether Actual, CSV profiles, OCR, and AI are ready.
 
 ## Normal User Flow
 
@@ -64,22 +76,22 @@ The web UI is intentionally small for early testers. It is not yet a full Actual
 Use synthetic sample files before trying real data:
 
 ```bash
-node src/cli.js csv:preview examples/csv/sample-bank.csv --summary
-node src/cli.js ocr:text-preview examples/ocr/sample-bank-text.txt
+ab-bot csv:preview examples/csv/sample-bank.csv --summary
+ab-bot ocr:text-preview examples/ocr/sample-bank-text.txt
 ```
 
 For a no-header CSV profile:
 
 ```bash
-node src/cli.js profile:save sample-no-header --mapping examples/mappings/no-header-date-amount-description-balance.json
-node src/cli.js csv:review examples/csv/sample-no-header.csv --profile sample-no-header
+ab-bot profile:save sample-no-header --mapping examples/mappings/no-header-date-amount-description-balance.json
+ab-bot csv:review examples/csv/sample-no-header.csv --profile sample-no-header
 ```
 
 For Actual imports, create a throwaway budget in Actual first, copy its Sync ID, and test dry-run before commit.
 
 ## Configuration
 
-Copy `.env.example` to `.env`.
+Run `ab-bot setup`, or copy `.env.example` to `.env`.
 
 Important settings:
 
@@ -96,7 +108,7 @@ Important settings:
 Auto-detect works for simple headered CSVs. For bank exports without headers, save a profile:
 
 ```bash
-node src/cli.js profile:save commbank-no-header --mapping examples/mappings/no-header-date-amount-description-balance.json
+ab-bot profile:save commbank-no-header --mapping examples/mappings/no-header-date-amount-description-balance.json
 ```
 
 Then select that profile in the web UI before dropping the CSV.
@@ -104,12 +116,15 @@ Then select that profile in the web UI before dropping the CSV.
 ## Useful CLI Commands
 
 ```bash
-node src/cli.js actual:accounts
-node src/cli.js csv:preview ./path/to/bank.csv --limit 10
-node src/cli.js review:summary .ab-bot/reviews/review-file.json --limit 10
-node src/cli.js actual:dry-run .ab-bot/reviews/review-file.json --account-id actual-account-id
-node src/cli.js actual:commit .ab-bot/reviews/review-file.json --account-id actual-account-id --yes
-node src/cli.js ai:providers
+ab-bot setup
+ab-bot doctor
+ab-bot web
+ab-bot actual:accounts
+ab-bot csv:preview ./path/to/bank.csv --limit 10
+ab-bot review:summary .ab-bot/reviews/review-file.json --limit 10
+ab-bot actual:dry-run .ab-bot/reviews/review-file.json --account-id actual-account-id
+ab-bot actual:commit .ab-bot/reviews/review-file.json --account-id actual-account-id --yes
+ab-bot ai:providers
 ```
 
 ## Current Features
@@ -122,13 +137,13 @@ node src/cli.js ai:providers
 - Budget summaries and category suggestions
 - AI provider registry with disabled, OpenAI, and Ollama providers
 - OCR text/image preview with deterministic parsing for mobile banking screenshots
-- Simple local web UI with drag/drop, status, dry-run, commit, and chat
+- Simple local web UI with drag/drop, per-row category review, status, dry-run, commit, and chat
+- Setup wizard and doctor checks for local installs
 
 ## Roadmap
 
-- Friendlier setup wizard
 - One-click or guided Actual Budget deployment for new users
-- Better review/edit workflow in the browser
+- Saved source profiles that remember account/category defaults
 - More Australian bank CSV/OCR profiles
 - Stronger package/release flow for non-technical testers
 

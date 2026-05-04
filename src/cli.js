@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 import { readFile } from 'node:fs/promises';
+import { loadDotEnv } from './config/envFile.js';
+import { formatDoctorReport, runDoctor } from './setup/doctor.js';
+import { runSetupWizard } from './setup/wizard.js';
+import { createWebServer } from './web/server.js';
 import {
   approveAll,
   createActualBudgetClient,
@@ -28,9 +32,21 @@ import {
   withoutConsoleInfo,
 } from './index.js';
 
+await loadDotEnv();
+
 const [, , command, ...args] = process.argv;
 
-if (command === 'csv:preview') {
+if (!command || command === 'help' || command === '--help' || command === '-h') {
+  exitWithUsage(0);
+} else if (command === 'web') {
+  startWebServer(args);
+} else if (command === 'setup') {
+  await runSetupWizard();
+} else if (command === 'doctor') {
+  const report = await runDoctor();
+  console.log(formatDoctorReport(report));
+  process.exit(report.ok ? 0 : 1);
+} else if (command === 'csv:preview') {
   const { filePath, options, output } = await parsePreviewArgs(args);
   if (!filePath) {
     exitWithUsage();
@@ -123,6 +139,35 @@ if (command === 'csv:preview') {
   await importReviewToActual(args, { dryRun: false });
 } else {
   exitWithUsage();
+}
+
+function startWebServer(args) {
+  const { host, port } = parseWebArgs(args);
+  const server = createWebServer();
+  server.listen(port, host, () => {
+    console.log(`AB Bot web UI listening on http://${host}:${port}`);
+  });
+}
+
+function parseWebArgs(args) {
+  let host = process.env.AB_BOT_WEB_HOST || '127.0.0.1';
+  let port = Number.parseInt(process.env.AB_BOT_WEB_PORT || '3000', 10);
+
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] === '--host') {
+      host = args[index + 1];
+      index += 1;
+    } else if (args[index] === '--port') {
+      port = Number.parseInt(args[index + 1], 10);
+      index += 1;
+    }
+  }
+
+  if (!host || !Number.isInteger(port) || port <= 0) {
+    exitWithUsage();
+  }
+
+  return { host, port };
 }
 
 async function parsePreviewArgs(args) {
@@ -473,10 +518,13 @@ async function withActualClient(task) {
   }
 }
 
-function exitWithUsage() {
+function exitWithUsage(code = 1) {
   console.error(
     [
       'Usage:',
+      '  ab-bot setup',
+      '  ab-bot doctor',
+      '  ab-bot web [--host 127.0.0.1] [--port 3000]',
       '  ab-bot csv:preview <bank.csv> [--mapping profile.json|--profile name] [--summary] [--limit 10]',
       '  ab-bot profile:save <name> --mapping profile.json',
       '  ab-bot profile:list',
@@ -496,5 +544,5 @@ function exitWithUsage() {
       '  ab-bot actual:commit <review.json> --account-id <actual-account-id> --yes [--ids]',
     ].join('\n'),
   );
-  process.exit(1);
+  process.exit(code);
 }
