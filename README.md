@@ -135,11 +135,28 @@ See [docs/phase-3.md](docs/phase-3.md).
 
 - Local Ollama provider: implemented
 - OCR text preview: implemented with deterministic regex parsing
+- Simple local web UI: implemented
 - OCR screenshot ingestion
 - Confidence scoring
 - Multi-provider AI settings
 
 See [docs/phase-4.md](docs/phase-4.md).
+
+## Local Web UI
+
+Run:
+
+```bash
+npm run web
+```
+
+Then open:
+
+```text
+http://127.0.0.1:3000
+```
+
+The first UI is intentionally small: CSV preview, OCR text preview, account selection, and budget chat. Screenshot upload is scaffolded, with Tesseract image OCR planned next.
 
 ### Phase 5
 

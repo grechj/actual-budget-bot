@@ -10,7 +10,8 @@
   },
   "scripts": {
     "test": "node --test",
-    "lint": "node --check src/cli.js && node --check src/index.js"
+    "lint": "node --check src/cli.js && node --check src/index.js && node --check src/web/server.js",
+    "web": "node src/web/server.js"
   },
   "keywords": [
     "actual-budget",

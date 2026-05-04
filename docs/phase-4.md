@@ -61,3 +61,24 @@ The preview output uses the same canonical transaction shape as CSV imports, wit
 - Add a Tesseract wrapper that converts image files into OCR text.
 - Feed that text through the deterministic parser above.
 - Create an OCR review file so screenshot imports use the same human approval workflow as CSV imports.
+
+## Simple Web UI
+
+Start the local UI:
+
+```bash
+npm run web
+```
+
+Open:
+
+```text
+http://127.0.0.1:3000
+```
+
+The UI is intentionally plain and local:
+
+- Drag and drop CSV files for preview.
+- Drag and drop OCR text files for parsing.
+- Drag and drop screenshots to confirm upload handling; Tesseract image extraction comes next.
+- Choose an Actual Budget account and chat with the configured AI provider.

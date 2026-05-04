@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AB Bot</title>
+    <link rel="stylesheet" href="/assets/app.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <h1>AB Bot</h1>
+          <p>Local import preview and budget chat for Actual Budget.</p>
+        </div>
+        <button id="refreshAccounts" type="button">Refresh accounts</button>
+      </header>
+
+      <section class="settings">
+        <label>
+          Account
+          <select id="accountId">
+            <option value="">Choose an account</option>
+          </select>
+        </label>
+        <label>
+          Start date
+          <input id="startDate" type="date" value="2026-01-01">
+        </label>
+        <label>
+          End date
+          <input id="endDate" type="date" value="2026-01-31">
+        </label>
+        <label>
+          AI provider
+          <select id="provider"></select>
+        </label>
+        <label>
+          Model
+          <input id="model" type="text" placeholder="optional">
+        </label>
+      </section>
+
+      <section class="grid">
+        <article>
+          <h2>CSV Preview</h2>
+          <label class="dropzone" id="csvDrop">
+            <input id="csvFile" type="file" accept=".csv,text/csv">
+            <span>Drop a bank CSV here</span>
+          </label>
+          <pre id="csvOutput">No CSV selected.</pre>
+        </article>
+
+        <article>
+          <h2>Screenshot / OCR</h2>
+          <label class="dropzone" id="ocrDrop">
+            <input id="ocrFile" type="file" accept="image/*,.txt,text/plain">
+            <span>Drop screenshot or OCR text here</span>
+          </label>
+          <pre id="ocrOutput">Image upload is scaffolded; OCR text files parse now.</pre>
+        </article>
+      </section>
+
+      <section class="chat">
+        <h2>Chat</h2>
+        <textarea id="question" rows="3" placeholder="What should I pay attention to?"></textarea>
+        <div class="actions">
+          <button id="askButton" type="button">Ask AB Bot</button>
+        </div>
+        <pre id="chatOutput">Ask a question after choosing an account.</pre>
+      </section>
+    </main>
+    <script src="/assets/app.js"></script>
+  </body>
+</html>
