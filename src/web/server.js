@@ -84,6 +84,20 @@ async function routeRequest(request, response, options) {
     return;
   }
 
+  if (request.method === 'GET' && url.pathname === '/api/budget-metadata') {
+    await withActualClient(async (actual) => {
+      const [accounts, categories] = await Promise.all([
+        actual.getAccounts(),
+        actual.getCategories(),
+      ]);
+      sendJson(response, 200, {
+        accounts,
+        categories: normalizeCategories(categories),
+      });
+    }, options);
+    return;
+  }
+
   if (request.method === 'GET' && url.pathname === '/api/categories') {
     await withActualClient(async (actual) => {
       sendJson(response, 200, { categories: normalizeCategories(await actual.getCategories()) });

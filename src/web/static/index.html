@@ -85,12 +85,13 @@
         </div>
         <div class="import-settings">
           <label>
-            Default category
+            Batch category
             <select id="defaultCategory">
               <option value="">Leave uncategorised</option>
             </select>
           </label>
-          <p>Applies to this whole batch unless a transaction already has a category.</p>
+          <button id="applyCategoryButton" class="secondary" type="button">Apply to all rows</button>
+          <p>Use this for fast bulk tagging, then adjust individual rows in the preview table.</p>
         </div>
         <div class="actions">
           <button id="dryRunButton" type="button">Dry run</button>

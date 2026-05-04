@@ -17,10 +17,12 @@ const statusGrid = document.querySelector('#statusGrid');
 
 let currentPreview = null;
 let currentStatus = null;
+let currentCategories = [];
 
 document.querySelector('#refreshAccounts').addEventListener('click', refreshConnections);
 document.querySelector('#refreshStatus').addEventListener('click', loadStatus);
 document.querySelector('#askButton').addEventListener('click', askBot);
+document.querySelector('#applyCategoryButton').addEventListener('click', applyDefaultCategoryToPreview);
 document.querySelector('#dryRunButton').addEventListener('click', () => importToActual({ dryRun: true }));
 document.querySelector('#commitButton').addEventListener('click', () => importToActual({ dryRun: false }));
 csvFileInput.addEventListener('change', () => uploadPreview('/api/csv-preview', csvFileInput.files[0], csvOutput, 'CSV', {
@@ -37,8 +39,7 @@ refreshConnections();
 
 async function refreshConnections() {
   await loadStatus().catch(() => {});
-  await loadAccounts();
-  await loadCategories();
+  await loadBudgetMetadata();
 }
 
 async function loadStatus() {
@@ -96,12 +97,15 @@ async function loadProviders() {
   providerSelect.value = 'disabled';
 }
 
-async function loadAccounts() {
+async function loadBudgetMetadata() {
   accountSelect.disabled = true;
+  defaultCategorySelect.disabled = true;
   accountSelect.replaceChildren(optionFor('', 'Loading accounts...'));
+  defaultCategorySelect.replaceChildren(optionFor('', 'Loading categories...'));
 
   try {
-    const data = await fetchJson('/api/accounts');
+    const data = await fetchJson('/api/budget-metadata');
+    currentCategories = data.categories ?? [];
     setActualStatus({
       ok: true,
       label: 'Actual Budget',
@@ -112,7 +116,10 @@ async function loadAccounts() {
       optionFor('', 'Choose an account'),
       ...data.accounts.map((account) => optionFor(account.id, account.name)),
     );
+    renderDefaultCategorySelect();
+    rerenderCurrentPreview();
   } catch (error) {
+    currentCategories = [];
     setActualStatus({
       ok: false,
       label: 'Actual Budget',
@@ -124,34 +131,20 @@ async function loadAccounts() {
         : error.message,
     });
     accountSelect.replaceChildren(optionFor('', 'Actual Budget is not connected'));
+    defaultCategorySelect.replaceChildren(optionFor('', 'Categories unavailable'));
     chatOutput.textContent = error.message;
   } finally {
     accountSelect.disabled = false;
+    defaultCategorySelect.disabled = false;
     updateImportButtons();
   }
 }
 
-async function loadCategories() {
-  defaultCategorySelect.disabled = true;
-  defaultCategorySelect.replaceChildren(optionFor('', 'Loading categories...'));
-
-  try {
-    const data = await fetchJson('/api/categories');
-    defaultCategorySelect.replaceChildren(
-      optionFor('', 'Leave uncategorised'),
-      ...categoryOptions(data.categories ?? []),
-    );
-  } catch (error) {
-    defaultCategorySelect.replaceChildren(optionFor('', 'Categories unavailable'));
-  } finally {
-    defaultCategorySelect.disabled = false;
-  }
-}
-
-function categoryOptions(categories) {
-  return categories
-    .filter((category) => !category.hidden)
-    .map((category) => optionFor(category.id, category.group ? `${category.group} / ${category.name}` : category.name));
+function renderDefaultCategorySelect() {
+  defaultCategorySelect.replaceChildren(
+    optionFor('', 'Leave uncategorised'),
+    ...categoryOptions(),
+  );
 }
 
 function setActualStatus(actualStatus) {
@@ -208,9 +201,16 @@ async function uploadPreview(path, file, output, sourceLabel, fields = {}) {
     currentPreview = {
       sourceLabel,
       fileName: file.name,
-      transactions: data.transactions ?? [],
+      output,
+      summary: data.summary,
+      issues: data.issues ?? [],
+      rawText: data.rawText,
+      transactions: (data.transactions ?? []).map((transaction) => ({ ...transaction })),
     };
-    renderPreview(output, data, { sourceLabel, fileName: file.name });
+    renderPreview(output, {
+      ...data,
+      transactions: currentPreview.transactions,
+    }, { sourceLabel, fileName: file.name, editableCategories: true });
     setActivePreview();
   } catch (error) {
     output.replaceChildren(emptyState(error.message));
@@ -220,7 +220,7 @@ async function uploadPreview(path, file, output, sourceLabel, fields = {}) {
 function renderPreview(container, data, meta) {
   container.replaceChildren(
     summaryBlock(data.summary, meta),
-    transactionTable(data.transactions ?? []),
+    transactionTable(data.transactions ?? [], { editableCategories: meta.editableCategories }),
     issueList(data.issues ?? []),
     rawTextBlock(data.rawText),
   );
@@ -242,38 +242,61 @@ function summaryBlock(summary = {}, meta = {}) {
   return block;
 }
 
-function transactionTable(transactions) {
+function transactionTable(transactions, options = {}) {
   if (transactions.length === 0) {
     return emptyState('No transactions parsed yet.');
   }
 
   const table = document.createElement('table');
   table.innerHTML = [
-    '<thead><tr><th>Date</th><th>Description</th><th class="amount">Amount</th><th>Source</th></tr></thead>',
+    `<thead><tr><th>Date</th><th>Description</th><th class="amount">Amount</th>${options.editableCategories ? '<th>Category</th>' : ''}<th>Source</th></tr></thead>`,
     '<tbody></tbody>',
   ].join('');
   const body = table.querySelector('tbody');
 
-  for (const transaction of transactions.slice(0, 50)) {
+  transactions.forEach((transaction, index) => {
     const row = document.createElement('tr');
     row.append(
       cell(transaction.date),
       cell(transaction.description),
       cell(formatAmount(transaction.amount), 'amount'),
-      cell(sourceLabel(transaction.source)),
     );
-    body.append(row);
-  }
 
-  if (transactions.length > 50) {
-    const row = document.createElement('tr');
-    const more = cell(`${transactions.length - 50} more rows not shown`);
-    more.colSpan = 4;
-    row.append(more);
+    if (options.editableCategories) {
+      row.append(categoryCell(index, transaction.category));
+    }
+
+    row.append(cell(sourceLabel(transaction.source)));
     body.append(row);
-  }
+  });
 
   return table;
+}
+
+function categoryCell(index, selectedCategory) {
+  const element = document.createElement('td');
+  const select = document.createElement('select');
+  select.className = 'category-select';
+  select.replaceChildren(
+    optionFor('', 'Uncategorised'),
+    ...categoryOptions(),
+  );
+  select.value = selectedCategory || '';
+  select.addEventListener('change', () => {
+    currentPreview.transactions[index] = {
+      ...currentPreview.transactions[index],
+      category: select.value || null,
+    };
+    setActivePreview();
+  });
+  element.append(select);
+  return element;
+}
+
+function categoryOptions() {
+  return currentCategories
+    .filter((category) => !category.hidden)
+    .map((category) => optionFor(category.id, category.group ? `${category.group} / ${category.name}` : category.name));
 }
 
 function issueList(issues) {
@@ -358,6 +381,37 @@ function transactionsForImport() {
     ...transaction,
     category: transaction.category || defaultCategorySelect.value,
   }));
+}
+
+function applyDefaultCategoryToPreview() {
+  if (!currentPreview?.transactions?.length) {
+    importOutput.textContent = 'Preview a CSV or screenshot first.';
+    return;
+  }
+
+  currentPreview.transactions = currentPreview.transactions.map((transaction) => ({
+    ...transaction,
+    category: defaultCategorySelect.value || null,
+  }));
+  rerenderCurrentPreview();
+  setActivePreview();
+}
+
+function rerenderCurrentPreview() {
+  if (!currentPreview?.output) {
+    return;
+  }
+
+  renderPreview(currentPreview.output, {
+    summary: currentPreview.summary,
+    issues: currentPreview.issues,
+    rawText: currentPreview.rawText,
+    transactions: currentPreview.transactions,
+  }, {
+    sourceLabel: currentPreview.sourceLabel,
+    fileName: currentPreview.fileName,
+    editableCategories: true,
+  });
 }
 
 function renderImportResult(data) {
@@ -469,8 +523,9 @@ async function fetchJson(path) {
 
 function setActivePreview() {
   const count = currentPreview?.transactions?.length ?? 0;
+  const categorisedCount = currentPreview?.transactions?.filter((transaction) => transaction.category)?.length ?? 0;
   activePreview.textContent = count
-    ? `${count} ${currentPreview.sourceLabel} transactions ready from ${currentPreview.fileName}.`
+    ? `${count} ${currentPreview.sourceLabel} transactions ready from ${currentPreview.fileName}. ${categorisedCount} categorised.`
     : 'No parsed transactions ready to import.';
   updateImportButtons();
 }

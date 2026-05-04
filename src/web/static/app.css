@@ -335,13 +335,17 @@ summary {
   align-items: end;
   display: grid;
   gap: 8px;
-  grid-template-columns: minmax(220px, 360px) 1fr;
+  grid-template-columns: minmax(220px, 360px) auto 1fr;
   margin-top: 12px;
 }
 
 .import-settings p {
   font-size: 13px;
   margin: 0;
+}
+
+.category-select {
+  min-width: 190px;
 }
 
 .actions {
