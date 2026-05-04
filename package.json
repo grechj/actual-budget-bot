@@ -10,7 +10,10 @@
   },
   "scripts": {
     "test": "node --test",
-    "lint": "node --check src/cli.js && node --check src/index.js && node --check src/web/server.js && node --check src/web/static/app.js",
+    "test:debug": "node --test --test-concurrency=1",
+    "test:syntax": "node --check src/cli.js && node --check src/index.js && node --check src/web/server.js && node --check src/web/static/app.js && node --check src/setup/wizard.js && node --check src/setup/doctor.js && node --check src/config/envFile.js",
+    "test:all": "npm run test && npm run test:syntax",
+    "lint": "npm run test:syntax",
     "web": "node src/cli.js web",
     "setup": "node src/cli.js setup",
     "doctor": "node src/cli.js doctor"

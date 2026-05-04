@@ -157,7 +157,12 @@ Use the GitHub CSV/OCR issue templates. Please sanitize examples before posting:
 
 ```bash
 npm test
+npm run test:debug
+npm run test:syntax
+npm run test:all
 npm run web
 ```
+
+AB Bot tracks Actual Budget's testing and style guidance where it makes sense for a separate npm companion package. See [Actual Style Alignment](docs/actual-style-alignment.md).
 
 Actual Budget stays the financial source of truth. AB Bot should sit beside it as a careful import and assistant layer.
