@@ -1,165 +1,146 @@
 # AB Bot
 
-AB Bot is a local-first AI companion for [Actual Budget](https://actualbudget.org/). It is designed to help import messy financial data, review it safely, write clean transactions into Actual, and provide structured budget recommendations without taking ownership away from the user.
+AB Bot is a local-first companion for [Actual Budget](https://actualbudget.org/). It helps preview messy bank CSVs, parse banking screenshots, review transactions, import into Actual, and ask simple questions about your budget without replacing Actual as the source of truth.
 
-## What It Does
+## Privacy First
 
-- Imports bank CSV files into a canonical transaction format
-- Normalizes dates, descriptions, debit/credit columns, and signed amounts
-- Generates stable import IDs for deduplication
-- Provides an adapter boundary for Actual Budget's official `@actual-app/api` package
-- Defines an AI tool layer so agents query structured budget data before giving advice
+AB Bot runs locally by default. CSV files, screenshots, OCR text, previews, and Actual Budget data stay on your machine unless you deliberately configure a cloud AI provider such as OpenAI.
 
-## What It Will Do Next
+Use `AB_BOT_AI_PROVIDER=disabled` or `AB_BOT_AI_PROVIDER=ollama` if you want to keep AI fully local. Do not share real bank exports, screenshots, `.env` files, `.ab-bot` folders, or API keys in GitHub issues.
 
-- Saved CSV mapping profiles per bank
-- Review and edit UI before import
-- Dry-run imports into Actual Budget
-- OCR ingestion for banking screenshots
-- Category suggestions based on Actual history and user corrections
-- Daily position statements and end-of-month forecasts
-- Pluggable AI providers: local, OpenAI, Anthropic, and others
+## Quickstart
 
-## Why Actual Budget Stays the Source of Truth
-
-Actual already handles envelope budgeting, accounts, categories, rules, reconciliation, sync, and budget math. AB Bot should sit beside it as an ingestion and assistant layer rather than duplicating the finance engine.
-
-Actual's supported programmatic interface is the Node.js package `@actual-app/api`; it is not a REST API. Transaction imports should use `importTransactions` so Actual can run its existing import reconciliation and rules.
-
-## Current Project Shape
-
-```plaintext
-src/
-  adapters/
-    actualBudget.js    Actual Budget API boundary
-  ai/
-    provider.js        Provider interface placeholder
-    tools.js           Structured budget tools for agents
-  ingestion/
-    csv.js             CSV parser and mapping inference
-    dedupe.js          Stable imported_id generation
-    normalize.js       Canonical transaction normalization
-  cli.js               Local CSV preview command
-test/
-  csv.test.js
-docs/
-  architecture.md
-```
-
-## Try The CSV Preview
+1. Clone and install:
 
 ```bash
-node src/cli.js csv:preview ./path/to/bank.csv
+git clone https://github.com/grechj/actual-budget-bot.git
+cd actual-budget-bot
+npm install
 ```
 
-With an explicit mapping profile:
+2. Copy the example environment file:
 
 ```bash
-node src/cli.js csv:preview ./path/to/bank.csv --mapping ./examples/mappings/example-bank.json
+cp .env.example .env
 ```
 
-For bank exports without a header row:
+3. Start or open your local Actual Budget server. If you use the npm sync server:
 
 ```bash
-node src/cli.js csv:preview ./path/to/bank.csv --mapping ./examples/mappings/no-header-date-amount-description-balance.json
+npm install --location=global @actual-app/sync-server
+ACTUAL_DATA_DIR=.ab-bot/actual-server actual-server
 ```
 
-For a safer short preview while testing:
+4. In Actual, create a test budget or open an existing one. Copy the **Sync ID** from Settings -> Advanced, then set these values in `.env`:
 
-```bash
-node src/cli.js csv:preview ./path/to/bank.csv --mapping ./examples/mappings/no-header-date-amount-description-balance.json --limit 10
-```
-
-For only counts, issues, and duplicate row references:
-
-```bash
-node src/cli.js csv:preview ./path/to/bank.csv --mapping ./examples/mappings/no-header-date-amount-description-balance.json --summary
-```
-
-The command prints headers, mapping, canonical transactions, duplicate candidates, validation issues, and a summary. It does not write to Actual yet.
-
-## Configuration
-
-Copy `.env.example` to `.env` when you are ready to connect to Actual:
-
-```bash
-AB_BOT_DATA_DIR=.ab-bot/data
+```env
 ACTUAL_SERVER_URL=http://localhost:5006
-ACTUAL_PASSWORD=
-ACTUAL_BUDGET_ID=
+ACTUAL_PASSWORD=your-local-actual-password
+ACTUAL_BUDGET_ID=your-budget-sync-id
 ```
 
-Actual budget IDs are available in Actual's advanced settings.
-
-## Open-Source Principles
-
-- Local-first by default
-- Human review before commit
-- Structured data before AI
-- Actual Budget remains the financial source of truth
-- AI advice is advisory, never automatic authority
-- Provider choice should be user-controlled
-
-## Roadmap
-
-### Phase 1
-
-- CSV import preview: implemented
-- Mapping inference: implemented
-- Canonical transaction model: implemented
-- Duplicate detection: implemented
-- Mapping profile support: implemented
-- Row-level validation issues: implemented
-
-### Phase 2
-
-- Saved mapping profiles: implemented
-- Review/edit workflow: implemented
-- Actual dry-run import: implemented as a guarded CLI command
-- Actual commit import: implemented with explicit `--yes`
-- Actual import output: count-only by default, with optional `--ids`
-
-See [docs/phase-2.md](docs/phase-2.md).
-
-### Phase 3
-
-- Budget summary tools: implemented
-- Category suggestion engine: implemented
-- First AI provider: implemented for OpenAI Responses API
-- Local category rules: implemented
-- AI provider registry: implemented
-
-See [docs/phase-3.md](docs/phase-3.md).
-
-### Phase 4
-
-- Local Ollama provider: implemented
-- OCR text preview: implemented with deterministic regex parsing
-- Simple local web UI: implemented
-- OCR screenshot ingestion
-- Confidence scoring
-- Multi-provider AI settings
-
-See [docs/phase-4.md](docs/phase-4.md).
-
-## Local Web UI
-
-Run:
+5. Start the local AB Bot UI:
 
 ```bash
 npm run web
 ```
 
-Then open:
+Open `http://127.0.0.1:3000`. The status panel should show whether Actual, CSV profiles, OCR, and AI are ready.
 
-```text
-http://127.0.0.1:3000
+## Normal User Flow
+
+1. Choose an Actual account.
+2. Pick a CSV mapping profile if your bank export needs one.
+3. Drag in a CSV or banking screenshot.
+4. Review parsed transactions and warnings.
+5. Click **Dry run**. Nothing is written to Actual.
+6. If the dry run looks right, click **Commit to Actual** and confirm.
+7. Ask AB Bot simple questions after choosing an account and date range.
+
+The web UI is intentionally small for early testers. It is not yet a full Actual Budget replacement or hosted service.
+
+## Test Mode / Sample Data
+
+Use synthetic sample files before trying real data:
+
+```bash
+node src/cli.js csv:preview examples/csv/sample-bank.csv --summary
+node src/cli.js ocr:text-preview examples/ocr/sample-bank-text.txt
 ```
 
-The first UI is intentionally small: CSV preview, OCR text/image preview, account selection, guarded Actual dry-run/commit, and budget chat. On macOS, screenshot OCR tries Apple Vision first and falls back to Tesseract if needed.
+For a no-header CSV profile:
 
-### Phase 5
+```bash
+node src/cli.js profile:save sample-no-header --mapping examples/mappings/no-header-date-amount-description-balance.json
+node src/cli.js csv:review examples/csv/sample-no-header.csv --profile sample-no-header
+```
 
-- Multi-user access
-- Backup and recovery helpers
-- Polished web UI
+For Actual imports, create a throwaway budget in Actual first, copy its Sync ID, and test dry-run before commit.
+
+## Configuration
+
+Copy `.env.example` to `.env`.
+
+Important settings:
+
+- `ACTUAL_SERVER_URL`: usually `http://localhost:5006`
+- `ACTUAL_PASSWORD`: your local Actual server password
+- `ACTUAL_BUDGET_ID`: Actual Sync ID, not the display name
+- `AB_BOT_AI_PROVIDER`: `disabled`, `ollama`, or `openai`
+- `OPENAI_API_KEY`: only needed for OpenAI cloud AI
+- `OLLAMA_BASE_URL` and `OLLAMA_MODEL`: only needed for local Ollama
+- `TESSERACT_BIN`: optional OCR fallback if Apple Vision is unavailable
+
+## CSV Profiles
+
+Auto-detect works for simple headered CSVs. For bank exports without headers, save a profile:
+
+```bash
+node src/cli.js profile:save commbank-no-header --mapping examples/mappings/no-header-date-amount-description-balance.json
+```
+
+Then select that profile in the web UI before dropping the CSV.
+
+## Useful CLI Commands
+
+```bash
+node src/cli.js actual:accounts
+node src/cli.js csv:preview ./path/to/bank.csv --limit 10
+node src/cli.js review:summary .ab-bot/reviews/review-file.json --limit 10
+node src/cli.js actual:dry-run .ab-bot/reviews/review-file.json --account-id actual-account-id
+node src/cli.js actual:commit .ab-bot/reviews/review-file.json --account-id actual-account-id --yes
+node src/cli.js ai:providers
+```
+
+## Current Features
+
+- CSV preview and canonical transaction normalization
+- Mapping inference and saved mapping profiles
+- Duplicate detection with stable import IDs
+- Review files and guarded Actual imports
+- Actual dry-run and commit import paths
+- Budget summaries and category suggestions
+- AI provider registry with disabled, OpenAI, and Ollama providers
+- OCR text/image preview with deterministic parsing for mobile banking screenshots
+- Simple local web UI with drag/drop, status, dry-run, commit, and chat
+
+## Roadmap
+
+- Friendlier setup wizard
+- One-click or guided Actual Budget deployment for new users
+- Better review/edit workflow in the browser
+- More Australian bank CSV/OCR profiles
+- Stronger package/release flow for non-technical testers
+
+## Contributing Test Cases
+
+Use the GitHub CSV/OCR issue templates. Please sanitize examples before posting: replace names, account numbers, transaction IDs, amounts, and screenshots that reveal private information.
+
+## Development
+
+```bash
+npm test
+npm run web
+```
+
+Actual Budget stays the financial source of truth. AB Bot should sit beside it as a careful import and assistant layer.

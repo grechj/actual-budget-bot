@@ -16,6 +16,17 @@
         <button id="refreshAccounts" type="button">Refresh accounts</button>
       </header>
 
+      <section class="status-panel">
+        <div class="section-heading">
+          <div>
+            <h2>Status</h2>
+            <p>Local readiness for Actual, imports, OCR, and AI.</p>
+          </div>
+          <button id="refreshStatus" class="secondary" type="button">Refresh status</button>
+        </div>
+        <div class="status-grid" id="statusGrid">Checking local setup...</div>
+      </section>
+
       <section class="settings">
         <label>
           Account
@@ -76,7 +87,7 @@
           <button id="dryRunButton" type="button">Dry run</button>
           <button id="commitButton" class="danger" type="button">Commit to Actual</button>
         </div>
-        <div class="preview" id="importOutput">Run a dry run before committing.</div>
+        <div class="preview" id="importOutput">Dry run first. Commit only writes after confirmation.</div>
       </section>
 
       <section class="chat">

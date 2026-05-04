@@ -1,0 +1,57 @@
+name: CSV import failure
+description: Report a CSV parsing, mapping, preview, dry-run, or commit problem.
+title: "[CSV]: "
+labels: ["csv", "bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing AB Bot. Please do not upload real bank exports or private financial data.
+        Sanitize names, account numbers, transaction IDs, amounts, and balances before sharing examples.
+  - type: input
+    id: bank
+    attributes:
+      label: Bank/export source
+      description: Example: CommBank CSV export, NAB transaction export, manually edited CSV.
+    validations:
+      required: true
+  - type: dropdown
+    id: headers
+    attributes:
+      label: Does the CSV have a header row?
+      options:
+        - "Yes"
+        - "No"
+        - "Not sure"
+    validations:
+      required: true
+  - type: input
+    id: profile
+    attributes:
+      label: Mapping profile selected
+      description: Example: Auto-detect columns, commbank-no-header, custom profile name.
+  - type: textarea
+    id: sample
+    attributes:
+      label: Sanitized sample rows
+      description: Paste 3-5 fake/sanitized rows that still show the column shape.
+      render: csv
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: What happened?
+      description: Include the error message, preview summary, or dry-run result.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+      description: Describe the date, description, amount, debit/credit, or balance mapping you expected.
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Node version, AB Bot commit/version, Actual Budget version if known.

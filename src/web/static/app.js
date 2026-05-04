@@ -12,10 +12,12 @@ const importOutput = document.querySelector('#importOutput');
 const activePreview = document.querySelector('#activePreview');
 const chatOutput = document.querySelector('#chatOutput');
 const questionInput = document.querySelector('#question');
+const statusGrid = document.querySelector('#statusGrid');
 
 let currentPreview = null;
 
-document.querySelector('#refreshAccounts').addEventListener('click', loadAccounts);
+document.querySelector('#refreshAccounts').addEventListener('click', refreshConnections);
+document.querySelector('#refreshStatus').addEventListener('click', loadStatus);
 document.querySelector('#askButton').addEventListener('click', askBot);
 document.querySelector('#dryRunButton').addEventListener('click', () => importToActual({ dryRun: true }));
 document.querySelector('#commitButton').addEventListener('click', () => importToActual({ dryRun: false }));
@@ -29,7 +31,53 @@ setupDropzone('#ocrDrop', ocrFileInput);
 updateImportButtons();
 loadProviders();
 loadProfiles();
-loadAccounts();
+refreshConnections();
+
+async function refreshConnections() {
+  await loadStatus().catch(() => {});
+  await loadAccounts();
+}
+
+async function loadStatus() {
+  statusGrid.textContent = 'Checking local setup...';
+
+  try {
+    const data = await fetchJson('/api/status');
+    renderStatus(data);
+  } catch (error) {
+    statusGrid.replaceChildren(statusCard('AB Bot', {
+      ok: false,
+      message: 'Could not check local setup.',
+      details: error.message,
+    }));
+  }
+}
+
+function renderStatus(status) {
+  statusGrid.replaceChildren(
+    statusCard('Actual', status.actual),
+    statusCard('CSV', status.profiles),
+    statusCard('OCR', status.ocr),
+    statusCard('AI', status.ai),
+  );
+}
+
+function statusCard(fallbackLabel, item = {}) {
+  const card = document.createElement('div');
+  card.className = `status-card ${item.ok ? 'ok' : 'bad'}`;
+
+  const label = document.createElement('strong');
+  label.textContent = item.label || fallbackLabel;
+
+  const message = document.createElement('p');
+  message.textContent = item.message || 'Status unavailable.';
+
+  const details = document.createElement('span');
+  details.textContent = item.details || '';
+
+  card.append(label, message, details);
+  return card;
+}
 
 async function loadProviders() {
   const data = await fetchJson('/api/providers');
@@ -235,6 +283,7 @@ async function importToActual({ dryRun }) {
     }
 
     renderImportResult(data);
+    await loadStatus();
   } catch (error) {
     importOutput.textContent = error.message;
   }
@@ -242,6 +291,9 @@ async function importToActual({ dryRun }) {
 
 function renderImportResult(data) {
   const result = data.result ?? {};
+  const addedCount = result.addedCount ?? result.added?.length ?? 0;
+  const updatedCount = result.updatedCount ?? result.updated?.length ?? 0;
+  const updatedPreviewCount = result.updatedPreviewCount ?? result.updatedPreview?.length ?? 0;
   importOutput.replaceChildren(
     summaryBlock({
       importedRows: data.attemptedRows,
@@ -250,13 +302,24 @@ function renderImportResult(data) {
       sourceLabel: data.dryRun ? 'Dry run' : 'Committed',
       fileName: currentPreview?.fileName ?? 'preview',
     }),
-    emptyState([
-      `${result.addedCount ?? 0} ${data.dryRun ? 'would be added' : 'added'}`,
-      `${result.updatedCount ?? 0} ${data.dryRun ? 'would be updated' : 'updated'}`,
-      `${result.updatedPreviewCount ?? 0} possible updates`,
-    ].join(' | ')),
+    importOutcomeMessage(data, { addedCount, updatedCount, updatedPreviewCount }),
     issueList((result.errors ?? []).map((message) => ({ message }))),
   );
+}
+
+function importOutcomeMessage(data, counts) {
+  const message = document.createElement('div');
+  message.className = `import-result ${data.dryRun ? 'dry-run' : 'committed'}`;
+  const title = document.createElement('strong');
+  const detail = document.createElement('p');
+  title.textContent = data.dryRun ? 'Nothing was written to Actual.' : 'Transactions were sent to Actual.';
+  detail.textContent = [
+    `${counts.addedCount} ${data.dryRun ? 'would be added' : 'added'}`,
+    `${counts.updatedCount} ${data.dryRun ? 'would be updated' : 'updated'}`,
+    `${counts.updatedPreviewCount} possible updates`,
+  ].join(' | ');
+  message.append(title, detail);
+  return message;
 }
 
 async function askBot() {
@@ -288,6 +351,10 @@ async function askBot() {
       }),
     });
     const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Chat request failed.');
+    }
 
     chatOutput.textContent = data.content || data.error || 'No response.';
   } catch (error) {

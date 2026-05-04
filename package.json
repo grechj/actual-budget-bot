@@ -10,7 +10,7 @@
   },
   "scripts": {
     "test": "node --test",
-    "lint": "node --check src/cli.js && node --check src/index.js && node --check src/web/server.js",
+    "lint": "node --check src/cli.js && node --check src/index.js && node --check src/web/server.js && node --check src/web/static/app.js",
     "web": "node src/web/server.js"
   },
   "keywords": [
